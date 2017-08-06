@@ -1,0 +1,28 @@
+
+cmake_minimum_required(VERSION 2.8)
+project(DocBaker C)
+
+set(DOCBAKER_MAJOR_VERSION 0)
+set(DOCBAKER_MINOR_VERSION 1)
+set(DOCBAKER_PATCH_VERSION 0)
+set(DOCBAKER_VERSION ${DOCBAKER_MAJOR_VERSION}.${DOCBAKER_MINOR_VERSION}.${DOCBAKER_PATCH_VERSION})
+
+
+set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
+if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE $ENV{CMAKE_BUILD_TYPE})
+
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+        set(CMAKE_BUILD_TYPE "Release")
+    endif()
+endif()
+
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+
+if(CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+endif()
+
+add_subdirectory(src)
