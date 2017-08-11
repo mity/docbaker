@@ -23,9 +23,75 @@
  * IN THE SOFTWARE.
  */
 
+#include "cmdline.h"
+#include "misc.h"
+
+
+int verbose_level = 0;
+static char* argv0;
+
+
+static void
+print_version(void)
+{
+    printf("%s 0.0.1\n", argv0);
+    exit(1);
+}
+
+static void
+print_usage(void)
+{
+    printf("Usage: %s [OPTION]... [FILE]...\n", argv0);
+    printf("Generate documentation from source comments.\n");
+
+    printf("\nAuxiliary options:\n");
+    printf("  -v, --verbose[=LEVEL]     Increase/set verbose level\n");
+    printf("  -h, --help                Display this help and exit\n");
+    printf("      --version             Display version information and exit\n");
+
+    exit(1);
+}
+
+
+static const CMDLINE_OPTION cmdline_options[] = {
+    { 'h',  "help",     'h', 0 },
+    { '\0', "version",  'V', 0 },
+    { 'v',  "verbose",  'v', CMDLINE_OPTFLAG_OPTIONALARG },
+    { 0 }
+};
+
+static int
+cmdline_callback(int id, const char* arg, void* userdata)
+{
+    switch(id) {
+        case 'v':       verbose_level = (arg != NULL ? atoi(arg) : verbose_level+1); break;
+        case 'h':       print_usage(); break;
+        case 'V':       print_version(); break;
+
+        /* Commandline parsing errors. */
+        case CMDLINE_OPTID_UNKNOWN:
+            fprintf(stderr, "Unrecognized command line option '%s'.\n", arg);
+            exit(1);
+
+        case CMDLINE_OPTID_MISSINGARG:
+            fprintf(stderr, "The command line option '%s' requires an argument.\n", arg);
+            exit(1);
+
+        case CMDLINE_OPTID_BOGUSARG:
+            fprintf(stderr, "The command line option '%s' does not expect an argument.\n", arg);
+            exit(1);
+    }
+
+    return 0;
+}
+
 
 int
 main(int argc, char** argv)
 {
+    argv0 = argv[0];
+
+    cmdline_read(cmdline_options, argc, argv, cmdline_callback, NULL);
+
     return 0;
 }
