@@ -32,21 +32,30 @@
 #include <stdio.h>
 #include <string.h>
 
-
-#define STRINGIZE_(x)       #x
-#define STRINGIZE(x)        STRINGIZE_(x)
+#include "config.h"
 
 
 extern int verbose_level;
+
+
+/* Localization support. */
+
+#ifdef ENABLE_I18N
+    #include <libintl.h>
+    #include <locale.h>
+
+    #define _(str)          gettext(str)
+#else
+#endif
 
 
 /* Log message output. */
 
 void print_diag(FILE* out, const char* prefix, const char* fmt, ...);
 
-#define FATAL(...)      do { print_diag(stderr, "fatal error: ", __VA_ARGS__); exit(EXIT_FAILURE); } while(0)
-#define ERROR(...)      print_diag(stderr, "error: ", __VA_ARGS__)
-#define WARN(...)       print_diag(stderr, "warning: ", __VA_ARGS__)
+#define FATAL(...)      do { print_diag(stderr, _("fatal error: "), __VA_ARGS__); exit(EXIT_FAILURE); } while(0)
+#define ERROR(...)      print_diag(stderr, _("error: "), __VA_ARGS__)
+#define WARN(...)       print_diag(stderr, _("warning: "), __VA_ARGS__)
 
 
 /* Never-failing memory allocation. */

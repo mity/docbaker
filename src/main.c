@@ -25,7 +25,6 @@
 
 #include "misc.h"
 #include "cmdline.h"
-#include "version.h"
 
 
 int verbose_level = 0;
@@ -35,20 +34,20 @@ static char* argv0;
 static void
 print_version(void)
 {
-    printf("%s %s\n", argv0, DOCBAKER_VERSION_STR);
+    printf("%s %s\n", argv0, VERSION);
     exit(EXIT_SUCCESS);
 }
 
 static void
 print_usage(void)
 {
-    printf("Usage: %s [OPTION]... [FILE]...\n", argv0);
-    printf("Generate documentation from source comments.\n");
+    printf(_("Usage: %s [OPTION]... [FILE]...\n"), argv0);
+    printf(_("Generate documentation from source comments.\n"));
 
-    printf("\nAuxiliary options:\n");
-    printf("  -v, --verbose[=LEVEL]     Increase/set verbose level\n");
-    printf("  -h, --help                Display this help and exit\n");
-    printf("      --version             Display version information and exit\n");
+    printf(_("\nAuxiliary options:\n"));
+    printf("  -v, --verbose[=LEVEL]     %s\n", _("Increase/set verbose level"));
+    printf("  -h, --help                %s\n", _("Display this help and exit"));
+    printf("      --version             %s\n", _("Display version information and exit"));
 
     exit(EXIT_SUCCESS);
 }
@@ -71,11 +70,11 @@ cmdline_callback(int id, const char* arg, void* userdata)
 
         /* Commandline parsing errors. */
         case CMDLINE_OPTID_UNKNOWN:
-            FATAL("Unrecognized command line option '%s'.", arg);
+            FATAL(_("Unrecognized command line option '%s'."), arg);
         case CMDLINE_OPTID_MISSINGARG:
-            FATAL("The command line option '%s' requires an argument.", arg);
+            FATAL(_("The command line option '%s' requires an argument."), arg);
         case CMDLINE_OPTID_BOGUSARG:
-            FATAL("The command line option '%s' does not expect an argument.", arg);
+            FATAL(_("The command line option '%s' does not expect an argument."), arg);
     }
 
     return 0;
@@ -85,6 +84,12 @@ cmdline_callback(int id, const char* arg, void* userdata)
 int
 main(int argc, char** argv)
 {
+#ifdef ENABLE_I18N
+    setlocale(LC_ALL, "");
+    bindtextdomain (PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+#endif
+
     argv0 = argv[0];
 
     cmdline_read(cmdline_options, argc, argv, cmdline_callback, NULL);
