@@ -23,8 +23,9 @@
  * IN THE SOFTWARE.
  */
 
-#include "cmdline.h"
 #include "misc.h"
+#include "cmdline.h"
+#include "version.h"
 
 
 int verbose_level = 0;
@@ -34,7 +35,7 @@ static char* argv0;
 static void
 print_version(void)
 {
-    printf("%s 0.0.1\n", argv0);
+    printf("%s %s\n", argv0, DOCBAKER_VERSION_STR);
     exit(1);
 }
 

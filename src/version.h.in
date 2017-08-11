@@ -23,19 +23,17 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef DOCBAKER_MISC_H
-#define DOCBAKER_MISC_H
+#ifndef DOCBAKER_VERSION_H
+#define DOCBAKER_VERSION_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "misc.h"
 
 
-#define STRINGIZE_(x)       #x
-#define STRINGIZE(x)        STRINGIZE_(x)
+#define DOCBAKER_VERSION_MAJOR       @DOCBAKER_MAJOR_VERSION@
+#define DOCBAKER_VERSION_MINOR       @DOCBAKER_MINOR_VERSION@
+#define DOCBAKER_VERSION_RELEASE     @DOCBAKER_PATCH_VERSION@
+
+#define DOCBAKER_VERSION_STR         STRINGIZE(DOCBAKER_VERSION_MAJOR.DOCBAKER_VERSION_MINOR.DOCBAKER_VERSION_RELEASE)
 
 
-extern int verbose_level;
-
-
-#endif  /* DOCBAKER_MISC_H */
+#endif  /* DOCBAKER_VERSION_H */
