@@ -36,7 +36,7 @@ static void
 print_version(void)
 {
     printf("%s %s\n", argv0, DOCBAKER_VERSION_STR);
-    exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
 
 static void
@@ -50,7 +50,7 @@ print_usage(void)
     printf("  -h, --help                Display this help and exit\n");
     printf("      --version             Display version information and exit\n");
 
-    exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
 
 
@@ -71,16 +71,11 @@ cmdline_callback(int id, const char* arg, void* userdata)
 
         /* Commandline parsing errors. */
         case CMDLINE_OPTID_UNKNOWN:
-            fprintf(stderr, "Unrecognized command line option '%s'.\n", arg);
-            exit(EXIT_FAILURE);
-
+            FATAL("Unrecognized command line option '%s'.", arg);
         case CMDLINE_OPTID_MISSINGARG:
-            fprintf(stderr, "The command line option '%s' requires an argument.\n", arg);
-            exit(EXIT_FAILURE);
-
+            FATAL("The command line option '%s' requires an argument.", arg);
         case CMDLINE_OPTID_BOGUSARG:
-            fprintf(stderr, "The command line option '%s' does not expect an argument.\n", arg);
-            exit(EXIT_FAILURE);
+            FATAL("The command line option '%s' does not expect an argument.", arg);
     }
 
     return 0;

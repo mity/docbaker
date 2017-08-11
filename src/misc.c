@@ -23,30 +23,21 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef DOCBAKER_MISC_H
-#define DOCBAKER_MISC_H
-
-#include <errno.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "misc.h"
+#include <stdarg.h>
 
 
-#define STRINGIZE_(x)       #x
-#define STRINGIZE(x)        STRINGIZE_(x)
+void
+print_diag(FILE* out, const char* prefix, const char* fmt, ...)
+{
+    va_list args;
 
+    if(prefix != NULL)
+        fprintf(out, "%s", prefix);
 
-extern int verbose_level;
+    va_start(args, fmt);
+    vfprintf(out, fmt, args);
+    va_end(args);
 
-
-/* Log message output. */
-
-void print_diag(FILE* out, const char* prefix, const char* fmt, ...);
-
-#define FATAL(...)      do { print_diag(stderr, "fatal error: ", __VA_ARGS__); exit(EXIT_FAILURE); } while(0)
-#define ERROR(...)      print_diag(stderr, "error: ", __VA_ARGS__)
-#define WARN(...)       print_diag(stderr, "warning: ", __VA_ARGS__)
-
-
-#endif  /* DOCBAKER_MISC_H */
+    fprintf(out, "\n");
+}
