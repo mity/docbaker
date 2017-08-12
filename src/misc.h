@@ -26,11 +26,16 @@
 #ifndef DOCBAKER_MISC_H
 #define DOCBAKER_MISC_H
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <dirent.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "config.h"
 
@@ -46,6 +51,7 @@ extern int verbose_level;
 
     #define _(str)          gettext(str)
 #else
+    #define _(str)          str
 #endif
 
 
@@ -53,9 +59,23 @@ extern int verbose_level;
 
 void print_diag(FILE* out, const char* prefix, const char* fmt, ...);
 
-#define FATAL(...)      do { print_diag(stderr, _("fatal error: "), __VA_ARGS__); exit(EXIT_FAILURE); } while(0)
-#define ERROR(...)      print_diag(stderr, _("error: "), __VA_ARGS__)
-#define WARN(...)       print_diag(stderr, _("warning: "), __VA_ARGS__)
+#define FATAL(...)                                                          \
+    do {                                                                    \
+        print_diag(stderr, _("fatal error: "), __VA_ARGS__);                \
+        exit(EXIT_FAILURE);                                                 \
+    } while(0)
+
+#define ERROR(...)                                                          \
+    print_diag(stderr, _("error: "), __VA_ARGS__)
+
+#define WARN(...)                                                           \
+    print_diag(stderr, _("warning: "), __VA_ARGS__)
+
+#define NOTE(level, ...)                                                    \
+    do {                                                                    \
+        if((level) <= verbose_level)                                        \
+            print_diag(stdout, NULL, __VA_ARGS__);                          \
+    } while(0)
 
 
 /* Never-failing memory allocation. */
