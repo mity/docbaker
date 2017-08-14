@@ -113,7 +113,7 @@ cmdline_callback(int id, const char* arg, void* userdata)
 }
 
 static void
-process_file(const char* path)
+process_input_file(const char* path)
 {
     const char* fname;
     const char* ext;
@@ -133,10 +133,10 @@ process_file(const char* path)
     }
 }
 
-static void process_path(const char* path);
+static void process_input_path(const char* path);
 
 static void
-process_dir(const char* path)
+process_input_dir(const char* path)
 {
     char buffer[PATH_MAX];
     DIR* d;
@@ -155,14 +155,14 @@ process_dir(const char* path)
             continue;
 
         snprintf(buffer, PATH_MAX, "%s/%s", path, dent->d_name);
-        process_path(buffer);
+        process_input_path(buffer);
     }
 
     closedir(d);
 }
 
 static void
-process_path(const char* path)
+process_input_path(const char* path)
 {
     struct stat s;
 
@@ -170,9 +170,9 @@ process_path(const char* path)
         FATAL("%s (%s)", strerror(errno), path);
 
     if(S_ISDIR(s.st_mode))
-        process_dir(path);
+        process_input_dir(path);
     else
-        process_file(path);
+        process_input_file(path);
 }
 
 int
@@ -191,7 +191,7 @@ main(int argc, char** argv)
     array_append(&clang_opts, NULL);
 
     for(i = 0; i < array_size(&argv_paths); i++)
-        process_path(array_item(&argv_paths, i));
+        process_input_path(array_item(&argv_paths, i));
 
     array_fini(&argv_paths, NULL);
     array_fini(&clang_opts, NULL);
