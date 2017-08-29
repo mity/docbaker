@@ -26,15 +26,25 @@
 #include "misc.h"
 #include "array.h"
 #include "cmdline.h"
+#include "gen_html.h"
 #include "parse_cxx.h"
+#include "path.h"
 
 
 int verbose_level = 0;
 
-static char* argv0;
+static int dry_run = 0;
+static const char* argv0;
 static ARRAY argv_paths = ARRAY_INITIALIZER;
+
+/* For C/C++ parser. */
 static ARRAY clang_opts = ARRAY_INITIALIZER;
 
+/* For HTML generator. */
+static const char* html_output_dir = "doc-html";
+static const char* html_skin = "default";
+
+static int n_processed_files = 0;
 
 
 static void
@@ -51,53 +61,83 @@ print_usage(void)
     printf(_("Generate documentation from source comments.\n"));
 
     printf("\n%s\n", _("Options for C/C++ parser:"));
-    printf("  -I <PATH>                 %s\n", _("Add path to include search path"));
-    printf("  -isystem <PATH>           %s\n", _("Add path to SYSTEM include search path"));
-    printf("  -D <MACRO>[=VALUE]        %s\n", _("Define macro"));
+    printf("  -I <PATH>              %s\n", _("Add path to include search path"));
+    printf("  -isystem <PATH>        %s\n", _("Add path to SYSTEM include search path"));
+    printf("  -D <MACRO>[=VALUE]     %s\n", _("Define macro"));
+
+    printf("\n%s\n", _("Options for HTML generator:"));
+    printf("      --html[=DIR]       %s\n", _("Enable HTML generator and set its output directory"));
+    printf("      --html-skin=<SKIN> %s\n", _("Specify HTML skin"));
 
     printf("\n%s\n", _("Auxiliary options:"));
-    printf("  -v, --verbose[=LEVEL]     %s\n", _("Increase/set verbose level"));
-    printf("  -h, --help                %s\n", _("Display this help and exit"));
-    printf("      --version             %s\n", _("Display version information and exit"));
+    printf("  -n, --dry-run          %s\n", _("Do not generate any output"));
+    printf("  -v, --verbose[=LEVEL]  %s\n", _("Increase/set verbose level"));
+    printf("  -h, --help             %s\n", _("Display this help and exit"));
+    printf("      --version          %s\n", _("Display version information and exit"));
 
     exit(EXIT_SUCCESS);
 }
 
 
-static const CMDLINE_OPTION cmdline_options[] = {
-    { 'h',  "help",     'h', 0 },
-    { '\0', "version",  'V', 0 },
-    { 'v',  "verbose",  'v', CMDLINE_OPTFLAG_OPTIONALARG },
+#define OPTID_2(a,b)     (((int)(a) << 8) | ((int)(b) << 0))
+#define OPTID_3(a,b,c)   (((int)(a) << 16) | ((int)(b) << 8) | ((int)(c) << 0))
+#define OPTID_CXX(a)     OPTID_2('C', (a))
+#define OPTID_HTML(a)    OPTID_2('H', (a))
 
-    { '\0', "-D",       'D', CMDLINE_OPTFLAG_COMPILERLIKE },
-    { '\0', "-I",       'I', CMDLINE_OPTFLAG_COMPILERLIKE },
-    { '\0', "-isystem", 'S', CMDLINE_OPTFLAG_COMPILERLIKE },
+static const CMDLINE_OPTION cmdline_options[] = {
+    /* C/C++ parser options. */
+    { '\0', "-D",           OPTID_CXX('D'), CMDLINE_OPTFLAG_COMPILERLIKE },
+    { '\0', "-I",           OPTID_CXX('I'), CMDLINE_OPTFLAG_COMPILERLIKE },
+    { '\0', "-isystem",     OPTID_CXX('S'), CMDLINE_OPTFLAG_COMPILERLIKE },
+
+    /* HTML generator options. */
+    { '\0', "html",         OPTID_HTML('H'), CMDLINE_OPTFLAG_OPTIONALARG },
+    { '\0', "html-skin",    OPTID_HTML('S'), CMDLINE_OPTFLAG_REQUIREDARG },
+
+    /* Auxiliary options. */
+    { 'n',  "dry-run",      'n', 0 },
+    { 'h',  "help",         'h', 0 },
+    { '\0', "version",      'V', 0 },
+    { 'v',  "verbose",      'v', CMDLINE_OPTFLAG_OPTIONALARG },
 
     { 0 }
 };
-
-typedef struct CMDLINE_CONTEXT {
-} CMDLINE_CONTEXT;
 
 
 static int
 cmdline_callback(int id, const char* arg, void* userdata)
 {
     switch(id) {
+        /* C/C++ parser options. */
+        case OPTID_CXX('I'):
+            array_append(&clang_opts, (void*) "-I");
+            array_append(&clang_opts, (void*) arg);
+            break;
+        case OPTID_CXX('D'):
+            array_append(&clang_opts, (void*) "-D");
+            array_append(&clang_opts, (void*) arg);
+            break;
+        case OPTID_CXX('S'):
+            array_append(&clang_opts, (void*) "-isystem");
+            array_append(&clang_opts, (void*) arg);
+            break;
+
+        /* HTML generator options. */
+        case OPTID_HTML('H'):
+            if(arg != NULL)
+                html_output_dir = (const char*) arg;
+            break;
+        case OPTID_HTML('S'):
+            html_skin = (const char*) arg;
+            break;
+
+        /* Auxiliary options. */
+        case 'n':       dry_run = 1; break;
         case 'v':       verbose_level = (arg != NULL ? atoi(arg) : verbose_level+1); break;
         case 'h':       print_usage(); break;
         case 'V':       print_version(); break;
 
-        /* These are propagated to parse_cxx(). */
-        case 'I':       array_append(&clang_opts, (void*) "-I");
-                        array_append(&clang_opts, (void*) arg); break;
-
-        case 'D':       array_append(&clang_opts, (void*) "-D");
-                        array_append(&clang_opts, (void*) arg); break;
-
-        case 'S':       array_append(&clang_opts, (void*) "-isystem");
-                        array_append(&clang_opts, (void*) arg); break;
-
+        /* Non-option arguments, i.e. input files/dirs. */
         case 0:         array_append(&argv_paths, (void*) arg); break;
 
         /* Commandline parsing errors. */
@@ -115,22 +155,18 @@ cmdline_callback(int id, const char* arg, void* userdata)
 static void
 process_input_file(const char* path)
 {
-    const char* fname;
     const char* ext;
 
-    fname = strrchr(path, '/');
-    if(fname != NULL)
-        fname++;
-    else
-        fname = path;
-    ext = strrchr(fname, '.');
-
-    if(ext != NULL  &&  strcmp(ext, ".h") == 0) {
+    ext = path_extension(path);
+    if(strcmp(ext, ".h") == 0) {
         NOTE(0, _("Parsing file %s as C/C++..."), path);
         parse_cxx(path, array_data(&clang_opts));
     } else {
         NOTE(1, _("Skipping file %s (unknown file type)."), path);
+        return;
     }
+
+    n_processed_files++;
 }
 
 static void process_input_path(const char* path);
@@ -164,15 +200,19 @@ process_input_dir(const char* path)
 static void
 process_input_path(const char* path)
 {
-    struct stat s;
-
-    if(stat(path, &s) != 0)
-        FATAL("%s (%s)", strerror(errno), path);
-
-    if(S_ISDIR(s.st_mode))
+    if(path_is_dir(path))
         process_input_dir(path);
     else
         process_input_file(path);
+}
+
+static void
+generate_output(void)
+{
+    if(dry_run)
+        return;
+
+    gen_html(html_output_dir, html_skin);
 }
 
 int
@@ -190,11 +230,18 @@ main(int argc, char** argv)
     cmdline_read(cmdline_options, argc, argv, cmdline_callback, NULL);
     array_append(&clang_opts, NULL);
 
+    /* Process input files. */
     for(i = 0; i < array_size(&argv_paths); i++)
         process_input_path(array_item(&argv_paths, i));
 
+    if(n_processed_files == 0)
+        FATAL(_("No files to process."));
+
     array_fini(&argv_paths, NULL);
     array_fini(&clang_opts, NULL);
+
+    /* Generate output. */
+    generate_output();
 
     return EXIT_SUCCESS;
 }
