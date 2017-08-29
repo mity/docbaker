@@ -101,7 +101,7 @@ array_remove(ARRAY* array, off_t index, ARRAY_DTOR dtor_func)
 
     array->size--;
 
-    /* Shrink the arrayfer is less then 25% of the arrayfer is used. */
+    /* Shrink the array if its usage is below 25%. */
     if(4 * array->size < array->capacity) {
         array->capacity /= 2;
         array->data = realloc(array->data, array->capacity * sizeof(void*));
@@ -112,9 +112,6 @@ void
 array_clear(ARRAY* array, ARRAY_DTOR dtor_func)
 {
     array_fini(array, dtor_func);
-
-    array->data = NULL;
-    array->size = 0;
-    array->capacity = 0;
+    array_init(array);
 }
 
