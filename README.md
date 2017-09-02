@@ -4,7 +4,7 @@
 
 ## What is DocBaker
 
-CoToDoc is (or rather will be) yet another tool for extracting documentation
+DocBaker is (or rather will be) yet another tool for extracting documentation
 comments from source files and creating nice and reader-friendly documentation
 from it.
 
