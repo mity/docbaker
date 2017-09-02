@@ -1,6 +1,6 @@
 /*
- * DocBaker
- * (http://github.com/mity/docbaker)
+ * C Reusables
+ * <http://github.com/mity/c-reusables>
  *
  * Copyright (c) 2017 Martin Mitas
  *
@@ -28,6 +28,10 @@
 #include <stdio.h>
 #include <string.h>
 
+
+#ifdef _WIN32
+    #define snprintf    _snprintf
+#endif
 
 
 #define CMDLINE_AUXBUF_SIZE     32
@@ -178,6 +182,7 @@ cmdline_read(const CMDLINE_OPTION* options, int argc, char** argv,
                             if(len > CMDLINE_AUXBUF_SIZE)
                                 len = CMDLINE_AUXBUF_SIZE;
                             strncpy(auxbuf, badoptname, len);
+                            auxbuf[len] = '\0';
                             badoptname = auxbuf;
                         }
                     }
