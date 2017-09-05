@@ -27,6 +27,7 @@
 #include "array.h"
 #include "cmdline.h"
 #include "gen_html.h"
+#include "gen_json.h"
 #include "parse_cxx.h"
 #include "path.h"
 #include "value.h"
@@ -41,9 +42,20 @@ static ARRAY argv_paths = ARRAY_INIT;
 /* For C/C++ parser. */
 static ARRAY clang_opts = ARRAY_INIT;
 
+
+#define HTML_GENERATOR                  0x01
+#define JSON_GENERATOR                  0x02
+static unsigned enabled_generators = 0;
+
 /* For HTML generator. */
-static const char* html_output_dir = "doc-html";
-static const char* html_skin = "default";
+#define DEFAULT_HTML_OUTPUT_DIR     "doc-html"
+#define DEFAULT_HTML_SKIN           "default"
+static const char* html_output_dir = DEFAULT_HTML_OUTPUT_DIR;
+static const char* html_skin = DEFAULT_HTML_SKIN;
+
+/* For JSON generator. */
+#define DEFAULT_JSON_OUTPUT_FILE    "doc.json"
+static const char* json_output_file = DEFAULT_JSON_OUTPUT_FILE;
 
 static int n_processed_files = 0;
 
@@ -68,7 +80,12 @@ print_usage(void)
 
     printf("\n%s\n", _("Options for HTML generator:"));
     printf("      --html[=DIR]       %s\n", _("Enable HTML generator and set its output directory"));
-    printf("      --html-skin=<SKIN> %s\n", _("Specify HTML skin"));
+    printf("                         (%s: %s)\n", _("default"), DEFAULT_HTML_OUTPUT_DIR);
+    printf("      --html-skin=<SKIN> %s (%s: %s)\n", _("Specify HTML skin"), _("default"), DEFAULT_HTML_SKIN);
+
+    printf("\n%s\n", _("Options for JSON generator:"));
+    printf("      --json[=FILE]      %s\n", _("Enable JSON generator and set its output file"));
+    printf("                         (%s: %s)\n", _("default"), DEFAULT_JSON_OUTPUT_FILE);
 
     printf("\n%s\n", _("Auxiliary options:"));
     printf("  -n, --dry-run          %s\n", _("Do not generate any output"));
@@ -84,6 +101,7 @@ print_usage(void)
 #define OPTID_3(a,b,c)   (((int)(a) << 16) | ((int)(b) << 8) | ((int)(c) << 0))
 #define OPTID_CXX(a)     OPTID_2('C', (a))
 #define OPTID_HTML(a)    OPTID_2('H', (a))
+#define OPTID_JSON(a)    OPTID_2('J', (a))
 
 static const CMDLINE_OPTION cmdline_options[] = {
     /* C/C++ parser options. */
@@ -94,6 +112,9 @@ static const CMDLINE_OPTION cmdline_options[] = {
     /* HTML generator options. */
     { '\0', "html",         OPTID_HTML('H'), CMDLINE_OPTFLAG_OPTIONALARG },
     { '\0', "html-skin",    OPTID_HTML('S'), CMDLINE_OPTFLAG_REQUIREDARG },
+
+    /* JSON generator options. */
+    { '\0', "json",         OPTID_JSON('J'), CMDLINE_OPTFLAG_OPTIONALARG },
 
     /* Auxiliary options. */
     { 'n',  "dry-run",      'n', 0 },
@@ -125,11 +146,19 @@ cmdline_callback(int id, const char* arg, void* userdata)
 
         /* HTML generator options. */
         case OPTID_HTML('H'):
+            enabled_generators |= HTML_GENERATOR;
             if(arg != NULL)
                 html_output_dir = (const char*) arg;
             break;
         case OPTID_HTML('S'):
             html_skin = (const char*) arg;
+            break;
+
+        /* JSON generator options. */
+        case OPTID_JSON('J'):
+            enabled_generators |= JSON_GENERATOR;
+            if(arg != NULL)
+                json_output_file = (const char*) arg;
             break;
 
         /* Auxiliary options. */
@@ -213,7 +242,11 @@ generate_output(const VALUE* store)
     if(dry_run)
         return;
 
-    gen_html(html_output_dir, html_skin, store);
+    if(enabled_generators & HTML_GENERATOR)
+        gen_html(html_output_dir, html_skin, store);
+
+    if(enabled_generators & JSON_GENERATOR)
+        gen_json(json_output_file, store);
 }
 
 int
@@ -231,6 +264,8 @@ main(int argc, char** argv)
     argv0 = argv[0];
     cmdline_read(cmdline_options, argc, argv, cmdline_callback, NULL);
     array_append(&clang_opts, NULL);
+    if(enabled_generators == 0)
+        enabled_generators = HTML_GENERATOR;
 
     /* Create main data store. */
     store = value_create_dict();
