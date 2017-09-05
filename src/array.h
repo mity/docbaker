@@ -29,6 +29,10 @@
 #include "misc.h"
 
 
+/* Member destructor. */
+typedef void (*ARRAY_DTORFUNC)(void* /*item*/);
+
+
 typedef struct ARRAY {
     void** data;
     size_t size;
@@ -36,23 +40,19 @@ typedef struct ARRAY {
 } ARRAY;
 
 
-#define ARRAY_INITIALIZER       { 0 }
-
-
-/* Destructor. */
-typedef void (*ARRAY_DTOR)(void* /*item*/);
+#define ARRAY_INIT      { 0 }
 
 
 void array_init(ARRAY* array);
-void array_fini(ARRAY* array, ARRAY_DTOR dtor_func);
+void array_fini(ARRAY* array, ARRAY_DTORFUNC dtor_func);
 
 void array_reserve(ARRAY* array, size_t n_items);
 
 void** array_insert_raw(ARRAY* array, off_t index);
 void array_insert(ARRAY* array, off_t index, void* item);
 
-void array_remove(ARRAY* array, off_t index, ARRAY_DTOR dtor_func);
-void array_clear(ARRAY* array, ARRAY_DTOR dtor_func);
+void array_remove(ARRAY* array, off_t index, ARRAY_DTORFUNC dtor_func);
+void array_clear(ARRAY* array, ARRAY_DTORFUNC dtor_func);
 
 
 static inline void*
@@ -85,10 +85,13 @@ array_append_raw(ARRAY* array)
     return array_insert_raw(array, array->size);
 }
 
-static inline void
+static inline off_t
 array_append(ARRAY* array, void* item)
 {
-    array_insert(array, array->size, item);
+    off_t index = array->size;
+
+    array_insert(array, index, item);
+    return index;
 }
 
 

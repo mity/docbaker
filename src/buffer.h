@@ -36,7 +36,7 @@ typedef struct BUFFER {
 } BUFFER;
 
 
-#define BUFFER_INITIALIZER      { 0 }
+#define BUFFER_INIT()       { 0 }
 
 
 void buffer_init(BUFFER* buf);

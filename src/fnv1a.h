@@ -1,8 +1,8 @@
 /*
- * DocBaker
- * (http://github.com/mity/docbaker)
+ * C Reusables
+ * <http://github.com/mity/c-reusables>
  *
- * Copyright (c) 2017 Martin Mitas
+ * Copyright (c) 2016 Martin Mitas
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,14 +23,33 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef DOCBAKER_GEN_HTML_H
-#define DOCBAKER_GEN_HTML_H
+#ifndef CRE_FNV_H
+#define CRE_FNV_H
 
-#include "misc.h"
-#include "value.h"
+#include <stdlib.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
-void gen_html(const char* output_dir, const char* skin, const VALUE* store);
+/* Fowler–Noll–Vo hash implementation.
+ * (http://www.isthe.com/chongo/tech/comp/fnv/)
+ *
+ * We implement 1a variant of the function as it is generally recommended
+ * and preferred over the original variant 1.
+ */
+
+#define FNV1A_BASE_32           2166136261U
+#define FNV1A_BASE_64           14695981039346656037U
+
+uint32_t fnv1a_32(uint32_t fnv1a, const void* data, size_t n);
+uint64_t fnv1a_64(uint64_t fnv1a, const void* data, size_t n);
 
 
-#endif  /* DOCBAKER_GEN_HTML_H */
+#ifdef __cplusplus
+}  /* extern "C" { */
+#endif
+
+#endif  /* CRE_FNV_H */

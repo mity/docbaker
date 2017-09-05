@@ -93,9 +93,9 @@ parse_cxx_callback(CXCursor cur, CXCursor parent_cur, CXClientData data)
 }
 
 void
-parse_cxx(const char* path, const char** clang_opts)
+parse_cxx(const char* path, const char** clang_opts, VALUE* store)
 {
-    ARRAY argv = ARRAY_INITIALIZER;
+    ARRAY argv = ARRAY_INIT;
     int i;
     CXIndex index;
     CXTranslationUnit unit;
@@ -130,7 +130,8 @@ parse_cxx(const char* path, const char** clang_opts)
 
     /* Gather all things to be documented in the translation unit and its
      * documentation. */
-    clang_visitChildren(clang_getTranslationUnitCursor(unit), parse_cxx_callback, NULL);
+    clang_visitChildren(clang_getTranslationUnitCursor(unit),
+                        parse_cxx_callback, (CXClientData) store);
 
 err_parseTranslationUnit2:
     clang_disposeIndex(index);

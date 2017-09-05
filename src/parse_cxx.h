@@ -27,9 +27,10 @@
 #define DOCBAKER_PARSE_CXX_H
 
 #include "misc.h"
+#include "value.h"
 
 
-void parse_cxx(const char* path, const char** clang_opts);
+void parse_cxx(const char* path, const char** clang_opts, VALUE* store);
 
 
 #endif  /* DOCBAKER_PARSE_CXX_H */

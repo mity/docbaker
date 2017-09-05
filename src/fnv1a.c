@@ -1,8 +1,8 @@
 /*
- * DocBaker
- * (http://github.com/mity/docbaker)
+ * C Reusables
+ * <http://github.com/mity/c-reusables>
  *
- * Copyright (c) 2017 Martin Mitas
+ * Copyright (c) 2016 Martin Mitas
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,14 +23,37 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef DOCBAKER_GEN_HTML_H
-#define DOCBAKER_GEN_HTML_H
-
-#include "misc.h"
-#include "value.h"
+#include "fnv1a.h"
 
 
-void gen_html(const char* output_dir, const char* skin, const VALUE* store);
+#define FNV1A_PRIME_32      16777619
+#define FNV1A_PRIME_64      1099511628211
 
 
-#endif  /* DOCBAKER_GEN_HTML_H */
+uint32_t
+fnv1a_32(uint32_t fnv1a, const void* data, size_t n)
+{
+    const uint8_t* bytes = (const uint8_t*) data;
+    size_t i;
+
+    for(i = 0; i < n; i++) {
+        fnv1a ^= bytes[i];
+        fnv1a *= FNV1A_PRIME_32;
+    }
+
+    return fnv1a;
+}
+
+uint64_t
+fnv1a_64(uint64_t fnv1a, const void* data, size_t n)
+{
+    const uint8_t* bytes = (const uint8_t*) data;
+    size_t i;
+
+    for(i = 0; i < n; i++) {
+        fnv1a ^= bytes[i];
+        fnv1a *= FNV1A_PRIME_64;
+    }
+
+    return fnv1a;
+}

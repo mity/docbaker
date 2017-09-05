@@ -23,14 +23,33 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef DOCBAKER_GEN_HTML_H
-#define DOCBAKER_GEN_HTML_H
+#ifndef DOCBAKER_DICT_H
+#define DOCBAKER_DICT_H
 
 #include "misc.h"
-#include "value.h"
+#include "array.h"
 
 
-void gen_html(const char* output_dir, const char* skin, const VALUE* store);
+/* Value destructor. */
+typedef void (*DICT_DTORFUNC)(void* /*item*/);
 
 
-#endif  /* DOCBAKER_GEN_HTML_H */
+struct DICT_BUCKET;
+
+typedef struct DICT {
+    struct DICT_BUCKET** buckets;
+    size_t n_buckets;
+    size_t n_members;
+} DICT;
+
+
+void dict_init(DICT* dict);
+void dict_fini(DICT* dict, DICT_DTORFUNC dtor_func);
+
+void dict_set(DICT* dict, const char* key, void* value, DICT_DTORFUNC dtor_func);
+void* dict_get(DICT* dict, const char* key);
+
+void dict_collect_keys(DICT* dict, ARRAY* array);
+
+
+#endif  /* DOCBAKER_DICT_H */

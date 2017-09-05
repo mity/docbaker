@@ -28,7 +28,7 @@
 
 
 void
-gen_html(const char* output_dir, const char* skin)
+gen_html(const char* output_dir, const char* skin, const VALUE* store)
 {
     if(mkdir(output_dir, 0755) != 0) {
         if(!path_is_dir(output_dir))

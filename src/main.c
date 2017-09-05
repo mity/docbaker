@@ -29,16 +29,17 @@
 #include "gen_html.h"
 #include "parse_cxx.h"
 #include "path.h"
+#include "value.h"
 
 
 int verbose_level = 0;
 
 static int dry_run = 0;
 static const char* argv0;
-static ARRAY argv_paths = ARRAY_INITIALIZER;
+static ARRAY argv_paths = ARRAY_INIT;
 
 /* For C/C++ parser. */
-static ARRAY clang_opts = ARRAY_INITIALIZER;
+static ARRAY clang_opts = ARRAY_INIT;
 
 /* For HTML generator. */
 static const char* html_output_dir = "doc-html";
@@ -153,14 +154,14 @@ cmdline_callback(int id, const char* arg, void* userdata)
 }
 
 static void
-process_input_file(const char* path)
+process_input_file(const char* path, VALUE* store)
 {
     const char* ext;
 
     ext = path_extension(path);
     if(strcmp(ext, ".h") == 0) {
         NOTE(0, _("Parsing file %s as C/C++..."), path);
-        parse_cxx(path, array_data(&clang_opts));
+        parse_cxx(path, array_data(&clang_opts), store);
     } else {
         NOTE(1, _("Skipping file %s (unknown file type)."), path);
         return;
@@ -169,10 +170,10 @@ process_input_file(const char* path)
     n_processed_files++;
 }
 
-static void process_input_path(const char* path);
+static void process_input_path(const char* path, VALUE* store);
 
 static void
-process_input_dir(const char* path)
+process_input_dir(const char* path, VALUE* store)
 {
     char buffer[PATH_MAX];
     DIR* d;
@@ -191,34 +192,35 @@ process_input_dir(const char* path)
             continue;
 
         snprintf(buffer, PATH_MAX, "%s/%s", path, dent->d_name);
-        process_input_path(buffer);
+        process_input_path(buffer, store);
     }
 
     closedir(d);
 }
 
 static void
-process_input_path(const char* path)
+process_input_path(const char* path, VALUE* store)
 {
     if(path_is_dir(path))
-        process_input_dir(path);
+        process_input_dir(path, store);
     else
-        process_input_file(path);
+        process_input_file(path, store);
 }
 
 static void
-generate_output(void)
+generate_output(const VALUE* store)
 {
     if(dry_run)
         return;
 
-    gen_html(html_output_dir, html_skin);
+    gen_html(html_output_dir, html_skin, store);
 }
 
 int
 main(int argc, char** argv)
 {
     size_t i;
+    VALUE* store;
 
 #ifdef ENABLE_I18N
     setlocale(LC_ALL, "");
@@ -230,9 +232,14 @@ main(int argc, char** argv)
     cmdline_read(cmdline_options, argc, argv, cmdline_callback, NULL);
     array_append(&clang_opts, NULL);
 
+    /* Create main data store. */
+    store = value_create_dict();
+    value_dict_set(store, "GENERATOR_NAME", value_create_str("DocBaker"));
+    value_dict_set(store, "GENERATOR_VERSION", value_create_str(VERSION));
+
     /* Process input files. */
     for(i = 0; i < array_size(&argv_paths); i++)
-        process_input_path(array_item(&argv_paths, i));
+        process_input_path(array_item(&argv_paths, i), store);
 
     if(n_processed_files == 0)
         FATAL(_("No files to process."));
@@ -241,7 +248,10 @@ main(int argc, char** argv)
     array_fini(&clang_opts, NULL);
 
     /* Generate output. */
-    generate_output();
+    generate_output(store);
+
+    /* Release data store. */
+    value_unref(store);
 
     return EXIT_SUCCESS;
 }

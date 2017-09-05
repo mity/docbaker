@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>

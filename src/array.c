@@ -26,16 +26,8 @@
 #include "array.h"
 
 
-void
-array_init(ARRAY* array)
-{
-    array->data = NULL;
-    array->size = 0;
-    array->capacity = 0;
-}
-
-void
-array_fini(ARRAY* array, ARRAY_DTOR dtor_func)
+static void
+array_clear_(ARRAY* array, ARRAY_DTORFUNC dtor_func)
 {
     off_t index;
 
@@ -45,6 +37,20 @@ array_fini(ARRAY* array, ARRAY_DTOR dtor_func)
     }
 
     free(array->data);
+}
+
+void
+array_init(ARRAY* array)
+{
+    array->data = NULL;
+    array->size = 0;
+    array->capacity = 0;
+}
+
+void
+array_fini(ARRAY* array, ARRAY_DTORFUNC dtor_func)
+{
+    array_clear_(array, dtor_func);
 }
 
 void
@@ -86,15 +92,15 @@ array_insert(ARRAY* array, off_t index, void* item)
 }
 
 void
-array_remove(ARRAY* array, off_t index, ARRAY_DTOR dtor_func)
+array_remove(ARRAY* array, off_t index, ARRAY_DTORFUNC dtor_func)
 {
-    if(dtor_func != NULL)
-        dtor_func(array_item(array, index));
-
     if(array->size == 1) {    /* Removing last element? */
-        array_clear(array, NULL);
+        array_clear(array, dtor_func);
         return;
     }
+
+    if(dtor_func != NULL)
+        dtor_func(array_item(array, index));
 
     if(index < array->size - 1)
         memmove(array_item(array, index), array_item(array, index+1), (array->size - index - 1) * sizeof(void*));
@@ -109,9 +115,11 @@ array_remove(ARRAY* array, off_t index, ARRAY_DTOR dtor_func)
 }
 
 void
-array_clear(ARRAY* array, ARRAY_DTOR dtor_func)
+array_clear(ARRAY* array, ARRAY_DTORFUNC dtor_func)
 {
-    array_fini(array, dtor_func);
-    array_init(array);
+    array_clear_(array, dtor_func);
+    array->data = NULL;
+    array->size = 0;
+    array->capacity = 0;
 }
 
