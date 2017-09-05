@@ -57,9 +57,20 @@ extern int verbose_level;
 #endif
 
 
+/* Function attributes. */
+
+#ifdef __GNUC__
+    #define FUNCATTR_PRINTF(fmt_index, ellipses_index)                      \
+                __attribute__((format(printf, fmt_index, ellipses_index)))
+#else
+    #define FUNCATTR_PRINTF(fmt_index, ellipses_index)
+#endif
+
+
 /* Log message output. */
 
-void print_diag(FILE* out, const char* prefix, const char* fmt, ...);
+void print_diag(FILE* out, const char* prefix, const char* fmt, ...)
+        FUNCATTR_PRINTF(3, 4);
 
 #define FATAL(...)                                                          \
     do {                                                                    \
