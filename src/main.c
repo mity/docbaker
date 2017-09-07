@@ -30,7 +30,7 @@
 #include "gen_json.h"
 #include "parse_cxx.h"
 #include "path.h"
-#include "value.h"
+#include "store.h"
 
 
 int verbose_level = 0;
@@ -268,9 +268,9 @@ main(int argc, char** argv)
         enabled_generators = HTML_GENERATOR;
 
     /* Create main data store. */
-    store = value_create_dict();
-    value_dict_set(store, "GENERATOR_NAME", value_create_str("DocBaker"));
-    value_dict_set(store, "GENERATOR_VERSION", value_create_str(VERSION));
+    store = store_create();
+    value_dict_set(store, "generator_name", value_create_str("DocBaker"));
+    value_dict_set(store, "generator_version", value_create_str(VERSION));
 
     /* Process input files. */
     for(i = 0; i < array_size(&argv_paths); i++)
@@ -286,7 +286,7 @@ main(int argc, char** argv)
     generate_output(store);
 
     /* Release data store. */
-    value_unref(store);
+    store_destroy(store);
 
     return EXIT_SUCCESS;
 }

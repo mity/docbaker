@@ -25,6 +25,7 @@
 
 #include "parse_cxx.h"
 #include "array.h"
+#include "store.h"
 
 #include <clang-c/Index.h>
 
@@ -101,11 +102,13 @@ parse_cxx(const char* path, const char** clang_opts, VALUE* store)
     CXTranslationUnit unit;
     enum CXErrorCode err;
 
+    store_file(store, path);
+
     /* Build options for libclang. */
     array_append(&argv, "-DDOCBAKER");
     // FIXME: This is needed on my machine. This should be either guessed
     //        automagically or provided as an input during package building.
-    //        (Some optin propagated through CMake???)
+    //        (Some option propagated through CMake???)
     array_append(&argv, "-isystem/usr/lib64/clang/3.8.0/include");
     for(i = 0; clang_opts[i] != NULL; i++)
         array_append(&argv, (void*) clang_opts[i]);
