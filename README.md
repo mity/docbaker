@@ -4,14 +4,10 @@
 
 ## What is DocBaker
 
-DocBaker is (or rather will be) yet another tool for extracting documentation
-comments from source files and creating nice and reader-friendly documentation
-from it.
+Currently, DocBaker does nothing; its development has just started.
 
-
-## Current Status
-
-We are just at the start line.
+In the future, DocBaker will hopefully become yet another tool for gathering
+and generating HTML documention from C/C++ source files.
 
 
 ## License
