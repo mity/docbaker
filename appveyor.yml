@@ -1,0 +1,34 @@
+# YAML definition for Appveyor.com continuous integration.
+# See http://www.appveyor.com/docs/appveyor-yml
+
+version: '{branch}-{build}'
+
+environment:
+  - LLVM_VERSION: 5.0.0
+
+install:
+  - 'curl -sSf http://releases.llvm.org/%LLVM_VERSION%/LLVM-%LLVM_VERSION%-win32.exe -o LLVM.exe'
+  - '7z x LLVM.exe -oC:\LLVM'
+
+before_build:
+  - 'cmake --version'
+  - 'cmake -G "Visual Studio 12"'
+
+build:
+  project: DocBaker.sln
+  verbosity: minimal
+
+skip_tags: true
+
+os:
+  - Windows Server 2012 R2
+
+configuration:
+  - Debug
+  - Release
+
+platform:
+  - win32
+
+artifacts:
+  - path: $(configuration)/docbaker.exe
