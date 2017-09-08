@@ -61,7 +61,7 @@ gen_json_dump_value(FILE* f, const char* key, const VALUE* value, int indent)
             break;
 
         case VALUE_INT:
-            fprintf(f, PRIi64, value_int(value));
+            fprintf(f, "%"PRIi64, value_int(value));
             break;
 
         case VALUE_STR:
