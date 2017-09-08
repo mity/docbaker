@@ -25,6 +25,7 @@
 
 #include "parse_cxx.h"
 #include "array.h"
+#include "path.h"
 #include "store.h"
 
 #include <clang-c/Index.h>
@@ -96,6 +97,7 @@ parse_cxx_callback(CXCursor cur, CXCursor parent_cur, CXClientData data)
 void
 parse_cxx(const char* path, const char** clang_opts, VALUE* store)
 {
+    char opt_sysincdir[PATH_MAX] = { 0 };
     ARRAY argv = ARRAY_INIT;
     int i;
     CXIndex index;
@@ -106,10 +108,16 @@ parse_cxx(const char* path, const char** clang_opts, VALUE* store)
 
     /* Build options for libclang. */
     array_append(&argv, "-DDOCBAKER");
-    // FIXME: This is needed on my machine. This should be either guessed
-    //        automagically or provided as an input during package building.
-    //        (Some option propagated through CMake???)
-    array_append(&argv, "-isystem/usr/lib64/clang/3.8.0/include");
+
+#ifdef _WIN32
+    /* On Windows, we distribute the headers for libclang in the package
+     * and use path relative to the main executable for case user moves whole
+     * app directory elsewhere. */
+    snprintf(opt_sysincdir, PATH_MAX-1, "-isystem%s%s", path_to_executable(), CLANG_SYSINCDIR);
+#else
+    snprintf(opt_sysincdir, PATH_MAX-1, "-isystem%s", CLANG_SYSINCDIR);
+#endif
+    array_append(&argv, opt_sysincdir);
     for(i = 0; clang_opts[i] != NULL; i++)
         array_append(&argv, (void*) clang_opts[i]);
     array_append(&argv, NULL);

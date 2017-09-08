@@ -30,6 +30,8 @@
 #define PACKAGE                 "@PACKAGE@"
 #define VERSION                 "@VERSION@"
 
+#define CLANG_SYSINCDIR         "@LIBCLANG_SYSINCDIR@"
+
 #define LOCALEDIR               "@CMAKE_INSTALL_FULL_LOCALEDIR@"
 
 #cmakedefine ENABLE_I18N

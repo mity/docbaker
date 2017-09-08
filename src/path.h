@@ -31,16 +31,22 @@
 
 typedef struct PATH_DIR PATH_DIR;
 
-
 PATH_DIR* path_opendir(const char* path);
 int path_readdir(PATH_DIR* dir, char buffer[PATH_MAX]);
 void path_closedir(PATH_DIR* dir);
 
 
+/* Get path to the executable. (Just the directory). Always ends with
+ * path separator. */
+const char* path_to_executable(void);
+
 const char* path_basename(const char* path);
 const char* path_extension(const char* path);
 
 int path_is_dir(const char* path);
+
+
+void path_init(const char* argv0);
 
 
 #endif  /* DOCBAKER_PATH_H */

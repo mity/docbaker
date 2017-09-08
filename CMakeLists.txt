@@ -10,6 +10,9 @@ set(PATCH_VERSION   0)
 set(VERSION         ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
 
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
+
 include(GNUInstallDirs OPTIONAL)
 include(FindGettext OPTIONAL)
 

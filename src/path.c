@@ -40,6 +40,9 @@ struct PATH_DIR {
 #endif
 
 
+static char path_to_exe[PATH_MAX] = { 0 };
+
+
 PATH_DIR*
 path_opendir(const char* path)
 {
@@ -115,6 +118,12 @@ path_closedir(PATH_DIR* dir)
 }
 
 
+const char*
+path_to_executable(void)
+{
+    return path_to_exe;
+}
+
 #ifdef _WIN32
 /* Helper for path_basename() below. */
 static char*
@@ -168,3 +177,11 @@ path_is_dir(const char* path)
     return (stat(path, &s) == 0  &&  S_ISDIR(s.st_mode)) ? 1 : 0;
 }
 
+void
+path_init(const char* argv0)
+{
+    strncpy(path_to_exe, argv0, sizeof(path_to_exe) - 1);
+    *(char*) path_basename(path_to_exe) = '\0';
+    if(path_to_exe[0] == '\0')
+        strcpy(path_to_exe, "./");
+}

@@ -260,6 +260,8 @@ main(int argc, char** argv)
 #endif
 
     argv0 = argv[0];
+    path_init(argv0);
+
     cmdline_read(cmdline_options, argc, argv, cmdline_callback, NULL);
     array_append(&clang_opts, NULL);
     if(enabled_generators == 0)
