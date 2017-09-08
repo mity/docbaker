@@ -40,6 +40,7 @@
 #ifdef _WIN32
     #include "win32compat.h"
 #else
+    #include <limits.h>
     #include <unistd.h>
 #endif
 
