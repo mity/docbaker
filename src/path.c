@@ -25,16 +25,125 @@
 
 #include "path.h"
 
+#ifndef _WIN32
+    #include <dirent.h>
+#else
+    #include <io.h>
+#endif
 
-// TODO: Windows compatibility
 
+#ifdef _WIN32
+struct PATH_DIR {
+    intptr_t handle;
+    char pattern[PATH_MAX];
+};
+#endif
+
+
+PATH_DIR*
+path_opendir(const char* path)
+{
+#ifdef _WIN32
+    size_t len;
+    PATH_DIR* dir;
+
+    if(path == NULL || path[0] == '\0') {
+        errno = ENOENT;
+        return NULL;
+    }
+
+    len = strlen(path);
+    if(len+2 >= PATH_MAX) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    dir = (PATH_DIR*) malloc(sizeof(PATH_DIR));
+    dir->handle = 0;
+    strcpy(dir->pattern, path);
+
+    if(len > 0  &&  dir->pattern[len-1] != '/'  &&  dir->pattern[len-1] != '\\')
+        dir->pattern[len++] = '\\';
+    dir->pattern[len++] = '*';
+    dir->pattern[len++] = '\0';
+    return dir;
+#else
+    return (PATH_DIR*) opendir(path);
+#endif
+}
+
+int
+path_readdir(PATH_DIR* dir, char buffer[PATH_MAX])
+{
+#ifdef _WIN32
+    struct _finddata_t fileinfo;
+
+    if(dir->pattern[0] != '\0') {
+        dir->handle = _findfirst(dir->pattern, &fileinfo);
+        if(dir->handle == -1)
+            return -1;
+        dir->pattern[0] = '\0';
+    } else {
+        if(_findnext(dir->handle, &fileinfo) == -1)
+            return -1;
+    }
+
+    strcpy(buffer, fileinfo.name);
+    return 0;
+#else
+    struct dirent* ent;
+
+    ent = readdir((DIR*) dir);
+    if(ent != NULL) {
+        strcpy(buffer, ent->d_name);
+        return 0;
+    } else {
+        return -1;
+    }
+#endif
+}
+
+void
+path_closedir(PATH_DIR* dir)
+{
+#ifdef _WIN32
+    _findclose(dir->handle);
+    free(dir);
+#else
+    closedir((DIR*) dir);
+#endif
+}
+
+
+#ifdef _WIN32
+/* Helper for path_basename() below. */
+static char*
+strrpbrk(const char *s, const char *accept)
+{
+    const char* p;
+    char* p0;
+    char* p1;
+
+    for(p = accept, p0 = p1 = NULL; p && *p; ++p) {
+        p1 = strrchr(s, *p);
+        if(p1 && p1 > p0)
+            p0 = p1;
+    }
+    return p0;
+}
+#endif
 
 const char*
 path_basename(const char* path)
 {
     const char* last_delim;
 
+#ifdef _WIN32
+    /* On Win32, '/' as well as '\\' may be used as path separator. */
+    last_delim = strrpbrk(path, "\\/");
+#else
     last_delim = strrchr(path, '/');
+#endif
 
     return (last_delim ? last_delim+1 : path);
 }

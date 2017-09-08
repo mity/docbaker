@@ -30,14 +30,18 @@
 #include <sys/stat.h>
 
 #include <assert.h>
-#include <dirent.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
+
+#ifdef _WIN32
+    #include "win32compat.h"
+#else
+    #include <unistd.h>
+#endif
 
 #include "config.h"
 
@@ -77,6 +81,8 @@ void print_diag(FILE* out, const char* prefix, const char* fmt, ...)
         print_diag(stderr, _("fatal error: "), __VA_ARGS__);                \
         exit(EXIT_FAILURE);                                                 \
     } while(0)
+
+#undef ERROR
 
 #define ERROR(...)                                                          \
     print_diag(stderr, _("error: "), __VA_ARGS__)

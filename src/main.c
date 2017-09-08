@@ -205,26 +205,24 @@ static void
 process_input_dir(const char* path, VALUE* store)
 {
     char buffer[PATH_MAX];
-    DIR* d;
-    struct dirent* dent;
+    char dir_item[PATH_MAX];
+    PATH_DIR* d;
 
-    d = opendir(path);
+    d = path_opendir(path);
     if(d == NULL)
         FATAL("%s (%s)", strerror(errno), path);
 
-    while(1) {
-        dent = readdir(d);
-        if(dent == NULL)
-            break;
+    while(path_readdir(d, dir_item) == 0) {
 
-        if(dent->d_name[0] == '.')
+        /* Slip '.' and '..' */
+        if(dir_item[0] == '.' && (dir_item[1] == '\0' || (dir_item[1] == '.' && dir_item[2] == '\0')))
             continue;
 
-        snprintf(buffer, PATH_MAX, "%s/%s", path, dent->d_name);
+        snprintf(buffer, PATH_MAX, "%s/%s", path, dir_item);
         process_input_path(buffer, store);
     }
 
-    closedir(d);
+    path_closedir(d);
 }
 
 static void

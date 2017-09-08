@@ -23,24 +23,37 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef DOCBAKER_PATH_H
-#define DOCBAKER_PATH_H
-
-#include "misc.h"
+#ifndef DOCBAKER_WIN32COMPAT_H
+#define DOCBAKER_WIN32COMPAT_H
 
 
-typedef struct PATH_DIR PATH_DIR;
+/* Building with MSVC? */
+#ifdef _MSC_VER
+    /* MSVC does not understand "inline" when building as C (not C++).
+     * However it understands "__inline" */
+    #ifndef __cplusplus
+        #define inline __inline
+    #endif
+#endif  /* _MSC_VER */
 
 
-PATH_DIR* path_opendir(const char* path);
-int path_readdir(PATH_DIR* dir, char buffer[PATH_MAX]);
-void path_closedir(PATH_DIR* dir);
+/* Building for Windows platform? */
+#ifdef _WIN32
+    #include <windows.h>
+    #ifndef PATH_MAX
+        #define PATH_MAX        MAX_PATH
+    #endif
+
+    #define snprintf            _snprintf
+
+    #include <direct.h>
+    #define mkdir(path, mode)   _mkdir((path))
+
+    #include <sys/stat.h>
+    #ifndef S_ISDIR
+        #define S_ISDIR(mode)   (((mode) & S_IFDIR) != 0)
+    #endif
+#endif  /* _WIN32 */
 
 
-const char* path_basename(const char* path);
-const char* path_extension(const char* path);
-
-int path_is_dir(const char* path);
-
-
-#endif  /* DOCBAKER_PATH_H */
+#endif  /* DOCBAKER_WIN32COMPAT_H */
