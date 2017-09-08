@@ -4,7 +4,7 @@
 version: '{branch}-{build}'
 
 environment:
-  - LLVM_VERSION: 5.0.0
+  LLVM_VERSION: 5.0.0
 
 install:
   - 'curl -sSf http://releases.llvm.org/%LLVM_VERSION%/LLVM-%LLVM_VERSION%-win32.exe -o LLVM.exe'
