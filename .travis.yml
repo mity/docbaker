@@ -9,7 +9,7 @@ compiler:
 addons:
     apt:
         packages:
-            libclang-4.0-dev
+            libclang-3.8-dev
 
 before_script:
     - mkdir build
