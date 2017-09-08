@@ -13,8 +13,10 @@ set(VERSION         ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 
-include(GNUInstallDirs OPTIONAL)
-include(FindGettext OPTIONAL)
+if(UNIX)
+    include(GNUInstallDirs OPTIONAL)
+    include(FindGettext OPTIONAL)
+endif()
 
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
