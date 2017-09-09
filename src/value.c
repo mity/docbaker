@@ -165,9 +165,9 @@ value_unref(VALUE* value)
                 dict_fini(&value->data.dict, (DICT_DTORFUNC) value_unref);
                 break;
         }
-    }
 
-    free(value);
+        free(value);
+    }
 }
 
 VALUE_TYPE
