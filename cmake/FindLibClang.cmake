@@ -27,53 +27,57 @@ set(LIBCLANG_LLVM_VERSION_LIST
 set(libclang_llvm_header_search_paths)
 set(libclang_llvm_lib_search_paths)
 
-list(APPEND libclang_llvm_lib_search_paths "/usr/lib/llvm")
-
-
 if (NOT "${LLVM_PREFIX}" STREQUAL "")
     list(APPEND libclang_llvm_header_search_paths
             "${LLVM_PREFIX}/include")
 
     list(APPEND libclang_llvm_lib_search_paths
             "${LLVM_PREFIX}/lib")
+    set(libclang_find_extra_options "NO_DEFAULT_PATH")
+else()
+    list(APPEND libclang_llvm_lib_search_paths "/usr/lib/llvm")
+
+    foreach(version ${LIBCLANG_LLVM_VERSION_LIST})
+        list(APPEND libclang_llvm_header_search_paths
+                "/usr/lib/llvm-${version}/include"
+                "/usr/lib/llvm/${version}/include"
+                "/opt/local/llvm-${version}/include")
+
+        list(APPEND libclang_llvm_lib_search_paths
+                "/usr/lib/llvm-${version}/lib"
+                "/usr/lib/llvm/${version}/lib"
+                "/opt/local/llvm-${version}/lib")
+    endforeach()
 endif()
-
-
-foreach(version ${LIBCLANG_LLVM_VERSION_LIST})
-    list(APPEND libclang_llvm_header_search_paths
-            "/usr/lib/llvm-${version}/include"
-            "/usr/lib/llvm/${version}/include"
-            "/opt/local/llvm-${version}/include")
-
-    list(APPEND libclang_llvm_lib_search_paths
-            "/usr/lib/llvm-${version}/lib"
-            "/usr/lib/llvm/${version}/lib"
-            "/opt/local/llvm-${version}/lib")
-endforeach()
-
 
 find_path(LIBCLANG_INCLUDE_DIR "clang-c/Index.h"
         PATHS ${libclang_llvm_header_search_paths}
         PATH_SUFFIXES "LLVM/include"    # for Windows
+        ${libclang_find_extra_options}
         DOC "The path to libclang include dir (must contain clang-c/Index.h et al.)")
+message(STATUS "Found LibClang includes: ${LIBCLANG_INCLUDE_DIR}")
 
 find_library(LIBCLANG_LIBRARY NAMES libclang.imp libclang clang
+        HINTS ${LIBCLANG_INCLUDE_DIR}/../lib
         PATHS ${libclang_llvm_lib_search_paths}
         PATH_SUFFIXES "LLVM/lib"    # for Windows
+        ${libclang_find_extra_options}
         DOC "The file path of libclang library")
 get_filename_component(LIBCLANG_LIBRARY_DIR ${LIBCLANG_LIBRARY} PATH)
 
 
 find_path(LIBCLANG_RUNTIME_INCLUDE_DIR_HELPER "include/stdarg.h"
-        PATHS "${LIBCLANG_LIBRARY_DIR}/clang"
+        HINTS "${LIBCLANG_LIBRARY_DIR}/clang"
         PATH_SUFFIXES ${LIBCLANG_LLVM_VERSION_LIST}
-        DOC "The path to libclang run-time include dir (should contain stdarg.h et al.")
+        ${libclang_find_extra_options})
 if ("${LIBCLANG_RUNTIME_INCLUDE_DIR_HELPER}" STREQUAL "LIBCLANG_RUNTIME_INCLUDE_DIR-NOTFOUND")
     message(WARNING "LibClang runtime include dir not found.")
     message(WARNING "Re-try and set LIBCLANG_RUNTIME_INCLUDE_DIR manually.")
     message(WARNING "Otherwise user would have to use something like 'docbaker -isystem ${LLVM_ROOT}/lib/clang/4.0.0/include' to prevent run-time errors.")
 else()
-    set(LIBCLANG_RUNTIME_INCLUDE_DIR "${LIBCLANG_RUNTIME_INCLUDE_DIR_HELPER}/include")
+    set(LIBCLANG_RUNTIME_INCLUDE_DIR "${LIBCLANG_RUNTIME_INCLUDE_DIR_HELPER}/include" CACHE PATH
+        "The path to libclang run-time include dir (should contain stdarg.h et al.")
+    message(STATUS "Found LibClang run-time includes: ${LIBCLANG_RUNTIME_INCLUDE_DIR}")
 endif()
 
 set(LIBCLANG_LIBRARIES ${LIBCLANG_LIBRARY})
