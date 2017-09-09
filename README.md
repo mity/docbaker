@@ -9,7 +9,7 @@
 Currently, DocBaker does nothing; its development has just started.
 
 In the future, DocBaker will hopefully become yet another tool for gathering
-and generating HTML documention from C/C++ source files.
+and generating HTML documentation from C/C++ source files.
 
 
 ## License
