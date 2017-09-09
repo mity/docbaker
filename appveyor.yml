@@ -7,12 +7,14 @@ environment:
   LLVM_VERSION: 5.0.0
 
 install:
-  - 'curl -sSf http://releases.llvm.org/%LLVM_VERSION%/LLVM-%LLVM_VERSION%-win32.exe -o LLVM.exe'
+  - 'if "%PLATFORM%"=="x64" curl -sSf http://releases.llvm.org/%LLVM_VERSION%/LLVM-%LLVM_VERSION%-win64.exe -o LLVM.exe'
+  - 'if not "%PLATFORM%"=="x64" curl -sSf http://releases.llvm.org/%LLVM_VERSION%/LLVM-%LLVM_VERSION%-win32.exe -o LLVM.exe'
   - '7z x LLVM.exe -oC:\LLVM'
 
 before_build:
   - 'cmake --version'
-  - 'cmake -G "Visual Studio 12"'
+  - 'if "%PLATFORM%"=="x64" cmake -DLLVM_PREFIX=C:\LLVM -G "Visual Studio 12 Win64"'
+  - 'if not "%PLATFORM%"=="x64" cmake -DLLVM_PREFIX=C:\LLVM -G "Visual Studio 12"'
 
 build:
   project: DocBaker.sln
@@ -28,7 +30,8 @@ configuration:
   - Release
 
 platform:
-  - win32
+  - x86
+  - x64
 
 artifacts:
   - path: $(configuration)/docbaker.exe
