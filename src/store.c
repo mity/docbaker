@@ -26,15 +26,91 @@
 #include "store.h"
 
 
+/* Note: Most nodes have both "name" and "id".
+ *
+ * "id" is meant to be unique.
+ * "name" is meant to be presented to the user.
+ */
+
+
+
+static VALUE*
+store_ensure(VALUE* parent_dict, VALUE_TYPE type, const char* key)
+{
+    VALUE* v;
+
+    v = value_dict_item(parent_dict, key);
+    if(v != NULL) {
+        assert(value_type(v) == type);
+    } else {
+        switch(type) {
+            case VALUE_ARRAY:   v = value_create_array(); break;
+            case VALUE_DICT:    v = value_create_dict(); break;
+            default:            assert(0); break;
+        }
+
+        value_dict_set(parent_dict, key, v);
+    }
+
+    return v;
+}
+
+VALUE*
+store_register_file(VALUE* store, const char* fname)
+{
+    VALUE* val_file;
+    VALUE* val_name;
+    VALUE* val_id;
+
+    val_name = value_create_str(fname);
+    val_id = value_ref(val_name);
+
+    val_file = value_create_dict();
+    value_dict_set(val_file, "name", val_name);
+    value_dict_set(val_file, "functions", value_create_array());
+    value_dict_set(val_file, "id", val_id);
+
+    value_array_append(store_ensure(store, VALUE_ARRAY, "files"), val_file);
+
+    return val_file;
+}
+
+VALUE*
+store_register_function(VALUE* store, VALUE* file, const char* name, const char* long_name)
+{
+    VALUE* val_func;
+    VALUE* val_name;
+    VALUE* val_long_name;
+    VALUE* val_id;
+
+    val_name = value_create_str(name);
+    val_long_name = value_create_str(long_name);
+    val_id = value_ref(val_long_name);
+
+    val_func = value_create_dict();
+    value_dict_set(val_func, "name", val_name);
+    value_dict_set(val_func, "long_name", val_long_name);
+    value_dict_set(val_func, "id", val_id);
+
+    value_array_append(value_dict_item(file, "functions"), val_func);
+
+    return val_func;
+}
+
+void
+store_register_doc(VALUE* item, const char* raw_doc)
+{
+    value_dict_set(item, "doc", value_create_str(raw_doc));
+}
+
 VALUE*
 store_create(void)
 {
     VALUE* store;
 
     store = value_create_dict();
-
-    /* Create empty hierarchy for real contents. */
-    value_dict_set(store, "files", value_create_array());
+    value_dict_set(store, "generator_name", value_create_str(PACKAGE_DISPLAYNAME));
+    value_dict_set(store, "generator_version", value_create_str(PACKAGE_VERSION));
 
     return store;
 }
@@ -45,15 +121,3 @@ store_destroy(VALUE* store)
     value_unref(store);
 }
 
-
-VALUE*
-store_file(VALUE* store, const char* fname)
-{
-    VALUE* file;
-
-    file = value_create_dict();
-    value_dict_set(file, "name", value_create_str(fname));
-    value_array_append(value_dict_item(store, "files"), file);
-
-    return file;
-}

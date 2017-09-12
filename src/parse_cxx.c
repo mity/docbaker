@@ -31,18 +31,42 @@
 #include <clang-c/Index.h>
 
 
+typedef struct PARSE_CXX_CONTEXT {
+    ARRAY comments;
+    VALUE* store;
+    VALUE* val_file;
+} PARSE_CXX_CONTEXT;
+
+
+#if 0
 static void
-parse_cxx_function(CXCursor cursor)
+parse_cxx_comment2doc(PARSE_CXX_CONTEXT* ctx, VALUE* val, const char* raw_comment_text)
+{
+    store_register_doc(val, raw_comment_text);
+}
+#endif
+
+static void
+parse_cxx_function(PARSE_CXX_CONTEXT* ctx, CXCursor cursor)
 {
     CXString name;
+    CXString spelling;
+    CXString comment;
+
+    name = clang_getCursorDisplayName(cursor);
+    spelling = clang_getCursorSpelling(cursor);
+    comment = clang_Cursor_getRawCommentText(cursor);
+
+    NOTE(1, "Detected function %s.", clang_getCString(spelling));
+    store_register_function(ctx->store, ctx->val_file,
+                    clang_getCString(spelling), clang_getCString(name));
+
+    //parse_cxx_comment2doc(ctx, val_func, clang_getCString(comment));
+
+#if 0
     int i, n;
 
     n = clang_Cursor_getNumArguments(cursor);
-
-    //name = clang_getCursorSpelling(cursor);
-    name = clang_getCursorDisplayName(cursor);
-    NOTE(0, "Detected function %s.", clang_getCString(name));
-
     for(i = 0; i < n; i++) {
         CXCursor arg;
         CXString arg_name;
@@ -52,23 +76,26 @@ parse_cxx_function(CXCursor cursor)
         arg_name = clang_getCursorDisplayName(arg);
         arg_type = clang_getTypeSpelling(clang_getCursorType(arg));
 
-        NOTE(0, "  arg %s %s.", clang_getCString(arg_type), clang_getCString(arg_name));
+        NOTE(2, "Detected function param %s %s.", clang_getCString(arg_type), clang_getCString(arg_name));
 
         clang_disposeString(arg_name);
         clang_disposeString(arg_type);
     }
+#endif
 
     clang_disposeString(name);
+    clang_disposeString(spelling);
+    clang_disposeString(comment);
 }
 
 static void
-parse_cxx_macro(CXCursor cur)
+parse_cxx_macro(PARSE_CXX_CONTEXT* ctx, CXCursor cur)
 {
     CXString name;
 
     //name = clang_getCursorSpelling(cur);
     name = clang_getCursorDisplayName(cur);
-    NOTE(0, "Detected macro %s.", clang_getCString(name));
+    NOTE(1, "Detected macro %s.", clang_getCString(name));
 
     clang_disposeString(name);
 }
@@ -77,6 +104,7 @@ parse_cxx_macro(CXCursor cur)
 static enum CXChildVisitResult
 parse_cxx_callback(CXCursor cur, CXCursor parent_cur, CXClientData data)
 {
+    PARSE_CXX_CONTEXT* ctx = (PARSE_CXX_CONTEXT*) data;
     CXSourceLocation loc;
 
     /* Ignore things not directly in the given file (i.e. anything what
@@ -86,8 +114,8 @@ parse_cxx_callback(CXCursor cur, CXCursor parent_cur, CXClientData data)
         return CXChildVisit_Continue;
 
     switch(cur.kind) {
-        case CXCursor_FunctionDecl:     parse_cxx_function(cur); break;
-        case CXCursor_MacroDefinition:  parse_cxx_macro(cur); break;
+        case CXCursor_FunctionDecl:     parse_cxx_function(ctx, cur); break;
+        case CXCursor_MacroDefinition:  parse_cxx_macro(ctx, cur); break;
         default:                        break;
     }
 
@@ -102,9 +130,12 @@ parse_cxx(const char* path, const char** clang_opts, VALUE* store)
     int i;
     CXIndex index;
     CXTranslationUnit unit;
+    CXCursor unit_cursor;
     enum CXErrorCode err;
+    PARSE_CXX_CONTEXT ctx;
 
-    store_file(store, path);
+    ctx.store = store;
+    ctx.val_file = store_register_file(store, path);
 
     /* Build options for libclang. */
     array_append(&argv, "-DDOCBAKER");
@@ -122,7 +153,7 @@ parse_cxx(const char* path, const char** clang_opts, VALUE* store)
         array_append(&argv, (void*) clang_opts[i]);
     array_append(&argv, NULL);
 
-    /* Make libclang to do all the hard work. */
+    /* Parse the translation unit. */
     index = clang_createIndex(0, 1);
     if(index == NULL) {
         ERROR(_("Function %s failed."), "clang_createIndex()");
@@ -138,12 +169,13 @@ parse_cxx(const char* path, const char** clang_opts, VALUE* store)
         ERROR(_("Function %s failed."), "clang_parseTranslationUnit2()");
         goto err_parseTranslationUnit2;
     }
+    unit_cursor = clang_getTranslationUnitCursor(unit);
 
     /* Gather all things to be documented in the translation unit and its
      * documentation. */
-    clang_visitChildren(clang_getTranslationUnitCursor(unit),
-                        parse_cxx_callback, (CXClientData) store);
+    clang_visitChildren(unit_cursor, parse_cxx_callback, (CXClientData) &ctx);
 
+    clang_disposeTranslationUnit(unit);
 err_parseTranslationUnit2:
     clang_disposeIndex(index);
 err_createIndex:

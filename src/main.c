@@ -63,7 +63,7 @@ static int n_processed_files = 0;
 static void
 print_version(void)
 {
-    printf("%s %s\n", argv0, VERSION);
+    printf("%s %s\n", argv0, PACKAGE_VERSION);
     exit(EXIT_SUCCESS);
 }
 
@@ -269,8 +269,6 @@ main(int argc, char** argv)
 
     /* Create main data store. */
     store = store_create();
-    value_dict_set(store, "generator_name", value_create_str("DocBaker"));
-    value_dict_set(store, "generator_version", value_create_str(VERSION));
 
     /* Process input files. */
     for(i = 0; i < array_size(&argv_paths); i++)

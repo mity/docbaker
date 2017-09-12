@@ -101,6 +101,8 @@ value_create_str_sz(const char* str, size_t size)
 VALUE*
 value_create_str(const char* str)
 {
+    if(str == NULL)
+        str = "";
     return value_create_str_sz(str, strlen(str));
 }
 

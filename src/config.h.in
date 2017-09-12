@@ -27,8 +27,9 @@
 #define DOCBAKER_CONFIG_H
 
 
-#define PACKAGE                 "@PACKAGE@"
-#define VERSION                 "@VERSION@"
+#define PACKAGE_NAME            "@PACKAGE@"
+#define PACKAGE_DISPLAYNAME     "@DISPLAYNAME@"
+#define PACKAGE_VERSION         "@VERSION@"
 
 #define CLANG_SYSINCDIR         "@LIBCLANG_SYSINCDIR@"
 

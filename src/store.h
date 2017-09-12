@@ -36,8 +36,10 @@
  * own purposes for possibly longer time then the store's existence, he should
  * gc_ref() it. */
 
-VALUE* store_file(VALUE* store, const char* fname);
+VALUE* store_register_file(VALUE* store, const char* fname);
+VALUE* store_register_function(VALUE* store, VALUE* file, const char* name, const char* long_name);
 
+void store_register_doc(VALUE* item, const char* raw_doc);
 
 VALUE* store_create(void);
 void store_destroy(VALUE* store);
