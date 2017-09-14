@@ -84,15 +84,17 @@ value_create_str_sz(const char* str, size_t size)
     value->type = VALUE_STR;
     value->n_refs = 1;
 
-    if(size <= VALUE_STRINPLACE_MAXSIZE) {
+    if(size < VALUE_STRINPLACE_MAXSIZE) {
         value->is_inplace_str = 1;
         value->data.str_inplace.size = (char) size;
         memcpy(value->data.str_inplace.buf, str, size);
+        value->data.str_inplace.buf[size] = '\0';
     } else {
         value->is_inplace_str = 0;
         value->data.str_ptr.size = size;
-        value->data.str_ptr.buf = (char*) malloc(size);
+        value->data.str_ptr.buf = (char*) malloc(size + 1);
         memcpy(value->data.str_ptr.buf, str, size);
+        value->data.str_ptr.buf[size] = '\0';
     }
 
     return value;
@@ -103,7 +105,7 @@ value_create_str(const char* str)
 {
     if(str == NULL)
         str = "";
-    return value_create_str_sz(str, strlen(str));
+   return value_create_str_sz(str, strlen(str) + 1);
 }
 
 VALUE*
