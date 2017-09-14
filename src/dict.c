@@ -73,7 +73,7 @@ dict_key_register(uint32_t hash, const char* keyname, size_t key_len)
         if(new_n_buckets == 0)
             new_n_buckets = 4;
 
-        new_buckets = (DICT_KEY**) malloc(sizeof(DICT_KEY*) * new_n_buckets);
+        new_buckets = (DICT_KEY**) xmalloc(sizeof(DICT_KEY*) * new_n_buckets);
         memset(new_buckets, 0, sizeof(DICT_KEY*) * new_n_buckets);
 
         for(i = 0; i < dict_key_store.n_buckets; i++) {
@@ -104,7 +104,7 @@ dict_key_register(uint32_t hash, const char* keyname, size_t key_len)
     }
 
     /* Create new key. */
-    key = (DICT_KEY*) malloc(offsetof(DICT_KEY, keyname) + key_len + 1);
+    key = (DICT_KEY*) xmalloc(offsetof(DICT_KEY, keyname) + key_len + 1);
     key->next = dict_key_store.buckets[hash % dict_key_store.n_buckets];
     key->n_refs = 1;
     key->hash = hash;
@@ -243,7 +243,7 @@ dict_set(DICT* dict, const char* key, void* value, DICT_DTORFUNC dtor_func)
         DICT_BUCKET** new_buckets;
         size_t i;
 
-        new_buckets = (DICT_BUCKET**) malloc(sizeof(DICT_BUCKET*) * new_n_buckets);
+        new_buckets = (DICT_BUCKET**) xmalloc(sizeof(DICT_BUCKET*) * new_n_buckets);
         memset(new_buckets, 0, sizeof(DICT_BUCKET*) * new_n_buckets);
 
         for(i = 0; i < dict->n_buckets; i++) {
@@ -264,7 +264,7 @@ dict_set(DICT* dict, const char* key, void* value, DICT_DTORFUNC dtor_func)
     }
 
     /* Add new value. */
-    b = (DICT_BUCKET*) malloc(sizeof(DICT_BUCKET));
+    b = (DICT_BUCKET*) xmalloc(sizeof(DICT_BUCKET));
     b->next = dict->buckets[hash % dict->n_buckets];
     b->key = dict_key_register(hash, key, key_len);
     b->value = value;

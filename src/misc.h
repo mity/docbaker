@@ -100,13 +100,9 @@ void print_diag(FILE* out, const char* prefix, const char* fmt, ...)
 
 /* Never-failing memory allocation. */
 
-void* x_malloc(size_t sz);
-void* x_calloc(size_t n, size_t sz);
-void* x_realloc(void* mem, size_t sz);
-
-#define malloc          x_malloc
-#define calloc          x_calloc
-#define realloc         x_realloc
+void* xmalloc(size_t sz);
+void* xcalloc(size_t n, size_t sz);
+void* xrealloc(void* mem, size_t sz);
 
 
 #endif  /* DOCBAKER_MISC_H */

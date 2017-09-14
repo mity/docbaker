@@ -46,7 +46,7 @@ buffer_reserve(BUFFER* buf, size_t n)
     size_t needed_capacity = buf->size + n;
 
     if(needed_capacity > buf->capacity) {
-        buf->data = (uint8_t*) realloc(buf->data, needed_capacity);
+        buf->data = (uint8_t*) xrealloc(buf->data, needed_capacity);
         buf->capacity = needed_capacity;
     }
 }
@@ -61,7 +61,7 @@ buffer_insert(BUFFER* buf, off_t index, const uint8_t* data, size_t n)
             else
                 buf->capacity = 4;
         }
-        buf->data = (uint8_t*) realloc(buf->data, buf->capacity);
+        buf->data = (uint8_t*) xrealloc(buf->data, buf->capacity);
     }
 
     if(index < buf->size)
@@ -88,7 +88,7 @@ buffer_remove(BUFFER* buf, off_t index, size_t n)
     /* Shrink the buffer if its usage is below 25%. */
     if(4 * buf->size < buf->capacity) {
         buf->capacity /= 2;
-        buf->data = (uint8_t*) realloc(buf->data, buf->capacity);
+        buf->data = (uint8_t*) xrealloc(buf->data, buf->capacity);
     }
 }
 

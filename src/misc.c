@@ -43,12 +43,8 @@ print_diag(FILE* out, const char* prefix, const char* fmt, ...)
 }
 
 
-#undef malloc
-#undef calloc
-#undef realloc
-
 void*
-x_malloc(size_t sz)
+xmalloc(size_t sz)
 {
     void* mem = malloc(sz);
     if(mem == NULL)
@@ -57,7 +53,7 @@ x_malloc(size_t sz)
 }
 
 void*
-x_calloc(size_t n, size_t sz)
+xcalloc(size_t n, size_t sz)
 {
     void* mem = calloc(n, sz);
     if(mem == NULL);
@@ -66,7 +62,7 @@ x_calloc(size_t n, size_t sz)
 }
 
 void*
-x_realloc(void* mem, size_t sz)
+xrealloc(void* mem, size_t sz)
 {
     mem = realloc(mem, sz);
     if(mem == NULL)

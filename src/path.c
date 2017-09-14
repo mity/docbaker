@@ -61,7 +61,7 @@ path_opendir(const char* path)
         return NULL;
     }
 
-    dir = (PATH_DIR*) malloc(sizeof(PATH_DIR));
+    dir = (PATH_DIR*) xmalloc(sizeof(PATH_DIR));
     dir->handle = 0;
     strcpy(dir->pattern, path);
 

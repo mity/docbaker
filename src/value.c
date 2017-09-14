@@ -67,7 +67,7 @@ value_create_int(int64_t integer)
 {
     VALUE* value;
 
-    value = (VALUE*) malloc(sizeof(VALUE));
+    value = (VALUE*) xmalloc(sizeof(VALUE));
     value->type = VALUE_INT;
     value->n_refs = 1;
     value->data.integer = integer;
@@ -80,7 +80,7 @@ value_create_str_sz(const char* str, size_t size)
 {
     VALUE* value;
 
-    value = (VALUE*) malloc(sizeof(VALUE));
+    value = (VALUE*) xmalloc(sizeof(VALUE));
     value->type = VALUE_STR;
     value->n_refs = 1;
 
@@ -92,7 +92,7 @@ value_create_str_sz(const char* str, size_t size)
     } else {
         value->is_inplace_str = 0;
         value->data.str_ptr.size = size;
-        value->data.str_ptr.buf = (char*) malloc(size + 1);
+        value->data.str_ptr.buf = (char*) xmalloc(size + 1);
         memcpy(value->data.str_ptr.buf, str, size);
         value->data.str_ptr.buf[size] = '\0';
     }
@@ -113,7 +113,7 @@ value_create_array(void)
 {
     VALUE* value;
 
-    value = (VALUE*) malloc(sizeof(VALUE));
+    value = (VALUE*) xmalloc(sizeof(VALUE));
     value->type = VALUE_ARRAY;
     value->n_refs = 1;
     array_init(&value->data.array);
@@ -126,7 +126,7 @@ value_create_dict(void)
 {
     VALUE* value;
 
-    value = (VALUE*) malloc(sizeof(VALUE));
+    value = (VALUE*) xmalloc(sizeof(VALUE));
     value->type = VALUE_DICT;
     value->n_refs = 1;
     dict_init(&value->data.dict);

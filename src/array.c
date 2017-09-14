@@ -59,7 +59,7 @@ array_reserve(ARRAY* array, size_t n_items)
     size_t needed_capacity = array->size + n_items;
 
     if(needed_capacity > array->capacity) {
-        array->data = realloc(array->data, needed_capacity * sizeof(void*));
+        array->data = xrealloc(array->data, needed_capacity * sizeof(void*));
         array->capacity = needed_capacity;
     }
 }
@@ -72,7 +72,7 @@ array_insert_raw(ARRAY* array, off_t index)
             array->capacity *= 2;
         else
             array->capacity = 4;
-        array->data = realloc(array->data, array->capacity * sizeof(void*));
+        array->data = xrealloc(array->data, array->capacity * sizeof(void*));
     }
 
     if(index < array->size)
@@ -110,7 +110,7 @@ array_remove(ARRAY* array, off_t index, ARRAY_DTORFUNC dtor_func)
     /* Shrink the array if its usage is below 25%. */
     if(4 * array->size < array->capacity) {
         array->capacity /= 2;
-        array->data = realloc(array->data, array->capacity * sizeof(void*));
+        array->data = xrealloc(array->data, array->capacity * sizeof(void*));
     }
 }
 
