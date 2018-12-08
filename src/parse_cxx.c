@@ -126,7 +126,7 @@ void
 parse_cxx(const char* path, const char** clang_opts, VALUE* store)
 {
     char opt_sysincdir[PATH_MAX] = { 0 };
-    ARRAY argv = ARRAY_INIT;
+    ARRAY argv = ARRAY_INITIALIZER;
     int i;
     CXIndex index;
     CXTranslationUnit unit;
@@ -138,20 +138,20 @@ parse_cxx(const char* path, const char** clang_opts, VALUE* store)
     ctx.val_file = store_register_file(store, path);
 
     /* Build options for libclang. */
-    array_append(&argv, "-DDOCBAKER");
+    CHECK(array_append(&argv, "-DDOCBAKER") == 0);
 
 #ifdef _WIN32
     /* On Windows, we distribute the headers for libclang in the package
-     * and use path relative to the main executable for case user moves whole
-     * app directory elsewhere. */
+     * and use path relative to the main executable for the case when user
+     * moves whole app directory elsewhere. */
     snprintf(opt_sysincdir, PATH_MAX-1, "-isystem%s%s", path_to_executable(), CLANG_SYSINCDIR);
 #else
     snprintf(opt_sysincdir, PATH_MAX-1, "-isystem%s", CLANG_SYSINCDIR);
 #endif
-    array_append(&argv, opt_sysincdir);
+    CHECK(array_append(&argv, opt_sysincdir) == 0);
     for(i = 0; clang_opts[i] != NULL; i++)
-        array_append(&argv, (void*) clang_opts[i]);
-    array_append(&argv, NULL);
+        CHECK(array_append(&argv, (void*) clang_opts[i]) == 0);
+    CHECK(array_append(&argv, NULL) == 0);
 
     /* Parse the translation unit. */
     index = clang_createIndex(0, 1);

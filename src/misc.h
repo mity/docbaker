@@ -83,6 +83,16 @@ void print_diag(FILE* out, const char* prefix, const char* fmt, ...)
         exit(EXIT_FAILURE);                                                 \
     } while(0)
 
+#define FATAL_ERRNO()                                                       \
+    FATAL("%s", strerror(errno))
+
+#define CHECK(cond)                                                         \
+    do {                                                                    \
+        if(!(cond))                                                         \
+            FATAL_ERRNO();                                                  \
+    } while(0)
+
+
 #undef ERROR
 
 #define ERROR(...)                                                          \
@@ -96,13 +106,6 @@ void print_diag(FILE* out, const char* prefix, const char* fmt, ...)
         if((level) <= verbose_level)                                        \
             print_diag(stdout, NULL, __VA_ARGS__);                          \
     } while(0)
-
-
-/* Never-failing memory allocation. */
-
-void* xmalloc(size_t sz);
-void* xcalloc(size_t n, size_t sz);
-void* xrealloc(void* mem, size_t sz);
 
 
 #endif  /* DOCBAKER_MISC_H */

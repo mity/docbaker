@@ -41,31 +41,3 @@ print_diag(FILE* out, const char* prefix, const char* fmt, ...)
 
     fprintf(out, "\n");
 }
-
-
-void*
-xmalloc(size_t sz)
-{
-    void* mem = malloc(sz);
-    if(mem == NULL)
-        FATAL("%s", strerror(errno));
-    return mem;
-}
-
-void*
-xcalloc(size_t n, size_t sz)
-{
-    void* mem = calloc(n, sz);
-    if(mem == NULL);
-        FATAL("%s", strerror(errno));
-    return mem;
-}
-
-void*
-xrealloc(void* mem, size_t sz)
-{
-    mem = realloc(mem, sz);
-    if(mem == NULL)
-        FATAL("%s", strerror(errno));
-    return mem;
-}

@@ -23,19 +23,23 @@ endif()
 
 
 
-include_directories("." "${CMAKE_CURRENT_BINARY_DIR}" "${LIBCLANG_INCLUDE_DIR}")
+include_directories("." "3rd_party" "${CMAKE_CURRENT_BINARY_DIR}" "${LIBCLANG_INCLUDE_DIR}")
 
 add_executable(docbaker
+        3rd_party/buffer.c
+        3rd_party/buffer.h
+        3rd_party/cmdline.c
+        3rd_party/cmdline.h
+        3rd_party/fnv1a.c
+        3rd_party/fnv1a.h
+        3rd_party/json.c
+        3rd_party/json.h
+        3rd_party/json-dom.c
+        3rd_party/json-dom.h
+        3rd_party/value.c
+        3rd_party/value.h
         array.c
         array.h
-        buffer.c
-        buffer.h
-        cmdline.c
-        cmdline.h
-        dict.c
-        dict.h
-        fnv1a.c
-        fnv1a.h
         gen_html.c
         gen_html.h
         gen_json.c
@@ -49,8 +53,6 @@ add_executable(docbaker
         path.h
         store.c
         store.h
-        value.c
-        value.h
         win32compat.h
 )
 

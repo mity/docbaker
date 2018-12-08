@@ -26,100 +26,16 @@
 #include "array.h"
 
 
-static void
-array_clear_(ARRAY* array, ARRAY_DTORFUNC dtor_func)
-{
-    off_t index;
-
-    if(dtor_func != NULL) {
-        for(index = 0; index < array_size(array); index++)
-            dtor_func(array_item(array, index));
-    }
-
-    free(array->data);
-}
-
-void
-array_init(ARRAY* array)
-{
-    array->data = NULL;
-    array->size = 0;
-    array->capacity = 0;
-}
-
-void
-array_fini(ARRAY* array, ARRAY_DTORFUNC dtor_func)
-{
-    array_clear_(array, dtor_func);
-}
-
-void
-array_reserve(ARRAY* array, size_t n_items)
-{
-    size_t needed_capacity = array->size + n_items;
-
-    if(needed_capacity > array->capacity) {
-        array->data = xrealloc(array->data, needed_capacity * sizeof(void*));
-        array->capacity = needed_capacity;
-    }
-}
-
-void**
-array_insert_raw(ARRAY* array, off_t index)
-{
-    if(array->size >= array->capacity) {
-        if(array->capacity > 0)
-            array->capacity *= 2;
-        else
-            array->capacity = 4;
-        array->data = xrealloc(array->data, array->capacity * sizeof(void*));
-    }
-
-    if(index < array->size)
-        memmove(array_item(array, index+1), array_item(array, index), (array->size - index) * sizeof(void*));
-
-    array->size++;
-    return &array->data[index];
-}
-
-void
-array_insert(ARRAY* array, off_t index, void* item)
-{
-    void** ptr;
-
-    ptr = array_insert_raw(array, index);
-    *ptr = item;
-}
-
-void
-array_remove(ARRAY* array, off_t index, ARRAY_DTORFUNC dtor_func)
-{
-    if(array->size == 1) {    /* Removing last element? */
-        array_clear(array, dtor_func);
-        return;
-    }
-
-    if(dtor_func != NULL)
-        dtor_func(array_item(array, index));
-
-    if(index < array->size - 1)
-        memmove(array_item(array, index), array_item(array, index+1), (array->size - index - 1) * sizeof(void*));
-
-    array->size--;
-
-    /* Shrink the array if its usage is below 25%. */
-    if(4 * array->size < array->capacity) {
-        array->capacity /= 2;
-        array->data = xrealloc(array->data, array->capacity * sizeof(void*));
-    }
-}
-
 void
 array_clear(ARRAY* array, ARRAY_DTORFUNC dtor_func)
 {
-    array_clear_(array, dtor_func);
-    array->data = NULL;
-    array->size = 0;
-    array->capacity = 0;
+    size_t i;
+
+    if(dtor_func != NULL) {
+        for(i = 0; i < array_size(array); i++)
+            dtor_func(array_get(array, i));
+    }
+
+    buffer_clear(&array->buffer);
 }
 

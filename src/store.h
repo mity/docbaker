@@ -41,8 +41,8 @@ VALUE* store_register_function(VALUE* store, VALUE* file, const char* name, cons
 
 void store_register_doc(VALUE* item, const char* raw_doc);
 
-VALUE* store_create(void);
-void store_destroy(VALUE* store);
+void store_init(VALUE* store);
+void store_fini(VALUE* store);
 
 
 #endif  /* DOCBAKER_STORE_H */

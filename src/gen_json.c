@@ -24,89 +24,16 @@
  */
 
 #include "gen_json.h"
+#include "json-dom.h"
 
-#include <inttypes.h>
-
-
-static void
-gen_json_dump_indent(FILE* f, int indent)
-{
-    static const char indent_str[32] = "                                ";
-
-    while(indent > sizeof(indent_str)) {
-        fprintf(f, "%.*s", (int) sizeof(indent_str), indent_str);
-        indent -= (int) sizeof(indent_str);
-    }
-
-    fprintf(f, "%.*s", indent, indent_str);
-}
 
 static int
-gen_json_key_cmp(const void* a, const void* b)
+gen_json_callback(const char* data, size_t size, void* userdata)
 {
-    return strcmp(*(const char**) a, *(const char**) b);
+    CHECK(fwrite(data, 1, size, (FILE*) userdata) == size);
+    return 0;
 }
 
-static void
-gen_json_dump_value(FILE* f, const char* key, const VALUE* value, int indent)
-{
-    gen_json_dump_indent(f, indent);
-
-    if(key != NULL)
-        fprintf(f, "%s: ", key);
-
-    switch(value_type(value)) {
-        case VALUE_NULL:
-            fprintf(f, "null");
-            break;
-
-        case VALUE_INT:
-            fprintf(f, "%"PRIi64, value_int(value));
-            break;
-
-        case VALUE_STR:
-            // FIXME: escaping
-            fprintf(f, "\"%.*s\"", (int) value_strlen(value), value_str(value));
-            break;
-
-        case VALUE_ARRAY:
-        {
-            size_t i, n;
-
-            fprintf(f, "[\n");
-            n = value_array_size(value);
-            for(i = 0; i < n; i++) {
-                gen_json_dump_value(f, NULL, value_array_item(value, i), indent + 4);
-                fprintf(f, (i < n-1) ? ",\n" : "\n");
-            }
-            gen_json_dump_indent(f, indent);
-            fprintf(f, "]");
-            break;
-        }
-
-        case VALUE_DICT:
-        {
-            ARRAY keys = ARRAY_INIT;
-            size_t i, n;
-
-            value_dict_collect_keys(value, &keys);
-            qsort(array_data(&keys), array_size(&keys), sizeof(void*), gen_json_key_cmp);
-
-            fprintf(f, "{\n");
-
-            n = array_size(&keys);
-            for(i = 0; i < n; i++) {
-                const char* key = (const char*) array_item(&keys, i);
-                gen_json_dump_value(f, key, value_dict_item(value, key), indent + 4);
-                fprintf(f, (i < n-1) ? ",\n" : "\n");
-            }
-
-            gen_json_dump_indent(f, indent);
-            fprintf(f, "}");
-            array_fini(&keys, NULL);
-        }
-    }
-}
 
 void
 gen_json(const char* json_output_file, const VALUE* store)
@@ -114,11 +41,7 @@ gen_json(const char* json_output_file, const VALUE* store)
     FILE* f;
 
     f = fopen(json_output_file, "wt");
-    if(f == NULL)
-        FATAL("%s (%s)", strerror(errno), json_output_file);
-
-    gen_json_dump_value(f, NULL, store, 0);
-
-    fprintf(f, "\n");
+    CHECK(f != NULL);
+    CHECK(json_dom_dump(store, gen_json_callback, f, 0, 0) == 0);
     fclose(f);
 }

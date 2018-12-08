@@ -37,10 +37,10 @@ int verbose_level = 0;
 
 static int dry_run = 0;
 static const char* argv0;
-static ARRAY argv_paths = ARRAY_INIT;
+static ARRAY argv_paths = ARRAY_INITIALIZER;
 
 /* For C/C++ parser. */
-static ARRAY clang_opts = ARRAY_INIT;
+static ARRAY clang_opts = ARRAY_INITIALIZER;
 
 
 #define HTML_GENERATOR                  0x01
@@ -132,16 +132,16 @@ cmdline_callback(int id, const char* arg, void* userdata)
     switch(id) {
         /* C/C++ parser options. */
         case OPTID_CXX('I'):
-            array_append(&clang_opts, (void*) "-I");
-            array_append(&clang_opts, (void*) arg);
+            CHECK(array_append(&clang_opts, (void*) "-I") == 0);
+            CHECK(array_append(&clang_opts, (void*) arg) == 0);
             break;
         case OPTID_CXX('D'):
-            array_append(&clang_opts, (void*) "-D");
-            array_append(&clang_opts, (void*) arg);
+            CHECK(array_append(&clang_opts, (void*) "-D") == 0);
+            CHECK(array_append(&clang_opts, (void*) arg) == 0);
             break;
         case OPTID_CXX('S'):
-            array_append(&clang_opts, (void*) "-isystem");
-            array_append(&clang_opts, (void*) arg);
+            CHECK(array_append(&clang_opts, (void*) "-isystem") == 0);
+            CHECK(array_append(&clang_opts, (void*) arg) == 0);
             break;
 
         /* HTML generator options. */
@@ -168,7 +168,7 @@ cmdline_callback(int id, const char* arg, void* userdata)
         case 'V':       print_version(); break;
 
         /* Non-option arguments, i.e. input files/dirs. */
-        case 0:         array_append(&argv_paths, (void*) arg); break;
+        case 0:         CHECK(array_append(&argv_paths, (void*) arg) == 0); break;
 
         /* Commandline parsing errors. */
         case CMDLINE_OPTID_UNKNOWN:
@@ -251,7 +251,7 @@ int
 main(int argc, char** argv)
 {
     size_t i;
-    VALUE* store;
+    VALUE store = VALUE_NULL_INITIALIZER;
 
 #ifdef ENABLE_I18N
     setlocale(LC_ALL, "");
@@ -268,11 +268,11 @@ main(int argc, char** argv)
         enabled_generators = HTML_GENERATOR;
 
     /* Create main data store. */
-    store = store_create();
+    store_init(&store);
 
     /* Process input files. */
     for(i = 0; i < array_size(&argv_paths); i++)
-        process_input_path(array_item(&argv_paths, i), store);
+        process_input_path(array_get(&argv_paths, i), &store);
 
     if(n_processed_files == 0)
         FATAL(_("No files to process."));
@@ -281,10 +281,10 @@ main(int argc, char** argv)
     array_fini(&clang_opts, NULL);
 
     /* Generate output. */
-    generate_output(store);
+    generate_output(&store);
 
     /* Release data store. */
-    store_destroy(store);
+    store_fini(&store);
 
     return EXIT_SUCCESS;
 }

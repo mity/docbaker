@@ -26,7 +26,7 @@
 #ifndef DOCBAKER_ARRAY_H
 #define DOCBAKER_ARRAY_H
 
-#include "misc.h"
+#include "buffer.h"
 
 
 /* Member destructor. */
@@ -34,64 +34,71 @@ typedef void (*ARRAY_DTORFUNC)(void* /*item*/);
 
 
 typedef struct ARRAY {
-    void** data;
-    size_t size;
-    size_t capacity;
+    BUFFER buffer;
 } ARRAY;
 
 
-#define ARRAY_INIT      { 0 }
+#define ARRAY_INITIALIZER      { BUFFER_INITIALIZER }
 
 
-void array_init(ARRAY* array);
-void array_fini(ARRAY* array, ARRAY_DTORFUNC dtor_func);
-
-void array_reserve(ARRAY* array, size_t n_items);
-
-void** array_insert_raw(ARRAY* array, off_t index);
-void array_insert(ARRAY* array, off_t index, void* item);
-
-void array_remove(ARRAY* array, off_t index, ARRAY_DTORFUNC dtor_func);
 void array_clear(ARRAY* array, ARRAY_DTORFUNC dtor_func);
 
 
-static inline void*
-array_data(const ARRAY* array)
+static inline void
+array_init(ARRAY* array)
 {
-    return array->data;
+    buffer_init(&array->buffer);
+}
+
+static inline void
+array_fini(ARRAY* array, ARRAY_DTORFUNC dtor_func)
+{
+    array_clear(array, dtor_func);
+    buffer_fini(&array->buffer);
+}
+
+static inline void*
+array_data(ARRAY* array)
+{
+    return buffer_data(&array->buffer);
 }
 
 static inline size_t
 array_size(const ARRAY* array)
 {
-    return array->size;
-}
-
-static inline off_t
-array_index(const ARRAY* array, void* item)
-{
-    return (off_t)((size_t)(((uint8_t*)item - (uint8_t*)array->data)));
+    return buffer_size(&array->buffer) / sizeof(void*);
 }
 
 static inline void*
-array_item(const ARRAY* array, off_t index)
+array_get(const ARRAY* array, size_t index)
 {
-    return array->data[index];
+    return * (void**) buffer_data_at((BUFFER*) &array->buffer, index * sizeof(void*));
 }
 
-static inline void**
-array_append_raw(ARRAY* array)
-{
-    return array_insert_raw(array, array->size);
-}
-
-static inline off_t
+static inline int
 array_append(ARRAY* array, void* item)
 {
-    off_t index = array->size;
+    return buffer_append(&array->buffer, &item, sizeof(void*));
+}
 
-    array_insert(array, index, item);
-    return index;
+static inline int
+array_reserve(ARRAY* array, size_t n_items)
+{
+    return buffer_reserve(&array->buffer, n_items * sizeof(void*));
+}
+
+static inline int
+array_insert(ARRAY* array, size_t index, void* item)
+{
+    return buffer_insert(&array->buffer, index * sizeof(void*), &item, sizeof(void*));
+}
+
+static inline void
+array_remove(ARRAY* array, size_t index, ARRAY_DTORFUNC dtor_func)
+{
+    if(dtor_func != NULL)
+        dtor_func(array_get(array, index));
+    buffer_remove(&array->buffer, index * sizeof(void*), sizeof(void*));
 }
 
 
