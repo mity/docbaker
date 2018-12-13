@@ -25,7 +25,7 @@
 
 #include "parse_cxx.h"
 #include "array.h"
-#include "path.h"
+#include "path_util.h"
 #include "store.h"
 
 #include <clang-c/Index.h>

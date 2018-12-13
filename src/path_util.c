@@ -23,7 +23,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "path.h"
+#include "path_util.h"
 
 #ifndef _WIN32
     #include <dirent.h>

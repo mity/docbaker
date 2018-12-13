@@ -24,7 +24,7 @@
  */
 
 #include "gen_html.h"
-#include "path.h"
+#include "path_util.h"
 
 
 void

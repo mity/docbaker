@@ -49,8 +49,8 @@ add_executable(docbaker
         misc.h
         parse_cxx.c
         parse_cxx.h
-        path.c
-        path.h
+        path_util.c
+        path_util.h
         store.c
         store.h
         win32compat.h
