@@ -13,8 +13,8 @@ install:
 
 before_build:
   - 'cmake --version'
-  - 'if "%PLATFORM%"=="x64" cmake -DLLVM_PREFIX=C:\LLVM -G "Visual Studio 12 Win64"'
-  - 'if not "%PLATFORM%"=="x64" cmake -DLLVM_PREFIX=C:\LLVM -G "Visual Studio 12"'
+  - 'if "%PLATFORM%"=="x64" cmake -DLLVM_PREFIX=C:\LLVM -G "Visual Studio 12 Win64" .'
+  - 'if not "%PLATFORM%"=="x64" cmake -DLLVM_PREFIX=C:\LLVM -G "Visual Studio 12" .'
 
 build:
   project: DocBaker.sln
