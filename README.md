@@ -1,4 +1,4 @@
-[![Build status (travis-ci.com)](https://img.shields.io/travis/mity/docbaker/master.svg?label=linux%20build)](https://travis-ci.org/mity/docbaker)
+[![Build status (travis-ci.com)](https://img.shields.io/travis/mity/docbaker/master.svg?label=linux%20build)](https://travis-ci.com/mity/docbaker)
 [![Build status (appveyor.com)](https://img.shields.io/appveyor/ci/mity/docbaker/master.svg?label=windows%20build)](https://ci.appveyor.com/project/mity/docbaker/branch/master)
 
 # DocBaker Readme
